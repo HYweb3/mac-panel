@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mac Panel - 调试工具</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .status-ok { background: #52c41a; color: white; }
+        .status-error { background: #ff4d4f; color: white; }
+        .status-warning { background: #faad14; color: white; }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 18px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+
+        .check-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f5f5f5;
+        }
+        .check-item:last-child { border-bottom: none; }
+        .check-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 16px;
+        }
+        .check-icon.ok { background: #52c41a; color: white; }
+        .check-icon.error { background: #ff4d4f; color: white; }
+        .check-icon.loading { background: #1890ff; color: white; }
+        .check-label {
+            flex: 1;
+            color: #333;
+        }
+        .check-value {
+            font-weight: bold;
+            color: #666;
+        }
+
+        button {
+            background: #1890ff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #40a9ff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+        }
+
+        .console-box {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+        .console-line {
+            padding: 4px 0;
+            border-bottom: 1px solid #333;
+        }
+        .console-error { color: #f48771; }
+        .console-warn { color: #cca700; }
+        .console-info { color: #75beff; }
+        .console-success { color: #89d185; }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        .info-item {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .info-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .info-value {
+            font-size: 16px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .error-details {
+            background: #fff2f0;
+            border: 1px solid #ffccc7;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+        }
+        .error-details.show {
+            display: block;
+        }
+        .error-title {
+            color: #ff4d4f;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .error-message {
+            color: #666;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .check-icon.loading::before {
+            content: '↻';
+            animation: spin 1s linear infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 Mac Panel 调试工具</h1>
+            <p style="color: #666; margin-top: 10px;">自动诊断前端和后端连接问题</p>
+            <div style="margin-top: 20px;">
+                <span class="status-badge status-ok" id="overall-status">检查中...</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🔍 连接检查</h2>
+            <div id="connection-checks"></div>
+        </div>
+
+        <div class="card">
+            <h2>💻 浏览器兼容性</h2>
+            <div id="browser-checks"></div>
+        </div>
+
+        <div class="card">
+            <h2>📡 API 测试</h2>
+            <button onclick="testAllAPIs()">测试所有 API</button>
+            <button onclick="testLogin()">测试登录</button>
+            <button onclick="clearResults()">清除结果</button>
+            <div id="api-results"></div>
+        </div>
+
+        <div class="card">
+            <h2>🌐 环境信息</h2>
+            <div class="info-grid" id="env-info"></div>
+        </div>
+
+        <div class="card">
+            <h2>📝 控制台输出</h2>
+            <div class="console-box" id="console-output"></div>
+        </div>
+
+        <div class="card">
+            <h2>🔧 快速修复建议</h2>
+            <div id="suggestions"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:3001';
+        const FRONTEND_URL = 'http://localhost:5173';
+
+        let consoleOutput = document.getElementById('console-output');
+        let overallStatus = document.getElementById('overall-status');
+        let checkResults = { ok: 0, error: 0, warning: 0 };
+
+        function log(message, type = 'info') {
+            const line = document.createElement('div');
+            line.className = `console-line console-${type}`;
+            line.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            consoleOutput.appendChild(line);
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+
+        function updateOverallStatus() {
+            if (checkResults.error === 0) {
+                overallStatus.textContent = '✅ 所有检查通过';
+                overallStatus.className = 'status-badge status-ok';
+            } else {
+                overallStatus.textContent = `❌ 发现 ${checkResults.error} 个错误`;
+                overallStatus.className = 'status-badge status-error';
+            }
+        }
+
+        function addCheck(label, value, status = 'ok') {
+            const container = document.getElementById('connection-checks');
+            const item = document.createElement('div');
+            item.className = 'check-item';
+
+            const iconClass = status === 'ok' ? 'ok' : status === 'loading' ? 'loading' : 'error';
+            const iconText = status === 'ok' ? '✓' : status === 'loading' ? '' : '✗';
+
+            item.innerHTML = `
+                <div class="check-icon ${iconClass}">${iconText}</div>
+                <div class="check-label">${label}</div>
+                <div class="check-value">${value}</div>
+            `;
+
+            container.appendChild(item);
+
+            if (status === 'ok') checkResults.ok++;
+            else if (status === 'error') checkResults.error++;
+            else checkResults.warning++;
+
+            updateOverallStatus();
+        }
+
+        async function checkConnection() {
+            log('开始连接检查...', 'info');
+
+            // 检查前端服务
+            addCheck('前端服务', '检查中...', 'loading');
+            try {
+                const response = await fetch(FRONTEND_URL);
+                addCheck('前端服务', '✅ 运行中', 'ok');
+                log('前端服务正常', 'success');
+            } catch (error) {
+                addCheck('前端服务', `❌ ${error.message}`, 'error');
+                log(`前端服务错误: ${error.message}`, 'error');
+            }
+
+            // 检查后端服务
+            addCheck('后端服务', '检查中...', 'loading');
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`);
+                const data = await response.json();
+                addCheck('后端服务', '✅ 运行中', 'ok');
+                log('后端服务正常', 'success');
+            } catch (error) {
+                addCheck('后端服务', `❌ ${error.message}`, 'error');
+                log(`后端服务错误: ${error.message}`, 'error');
+            }
+
+            // 检查 CORS
+            addCheck('CORS 配置', '检查中...', 'loading');
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`, {
+                    method: 'OPTIONS'
+                });
+                const corsHeader = response.headers.get('Access-Control-Allow-Origin');
+                if (corsHeader) {
+                    addCheck('CORS 配置', `✅ ${corsHeader}`, 'ok');
+                    log(`CORS 配置: ${corsHeader}`, 'success');
+                } else {
+                    addCheck('CORS 配置', '⚠️ 未检测到', 'warning');
+                    log('CORS 头可能未正确配置', 'warn');
+                }
+            } catch (error) {
+                addCheck('CORS 配置', `❌ ${error.message}`, 'error');
+                log(`CORS 检查失败: ${error.message}`, 'error');
+            }
+        }
+
+        function checkBrowserCompatibility() {
+            log('检查浏览器兼容性...', 'info');
+
+            const features = [
+                { name: 'Fetch API', check: () => typeof fetch !== 'undefined' },
+                { name: 'Promise', check: () => typeof Promise !== 'undefined' },
+                { name: 'WebSocket', check: () => typeof WebSocket !== 'undefined' },
+                { name: 'LocalStorage', check: () => {
+                    try {
+                        localStorage.setItem('test', 'test');
+                        localStorage.removeItem('test');
+                        return true;
+                    } catch (e) {
+                        return false;
+                    }
+                }},
+                { name: 'ES6 Modules', check: () => typeof Symbol !== 'undefined' },
+                { name: 'Async/Await', check: () => (async () => {})() instanceof Promise }
+            ];
+
+            features.forEach(feature => {
+                const supported = feature.check();
+                const status = supported ? '✅ 支持' : '❌ 不支持';
+                const type = supported ? 'ok' : 'error';
+
+                const container = document.getElementById('browser-checks');
+                const item = document.createElement('div');
+                item.className = 'check-item';
+                item.innerHTML = `
+                    <div class="check-icon ${supported ? 'ok' : 'error'}">${supported ? '✓' : '✗'}</div>
+                    <div class="check-label">${feature.name}</div>
+                    <div class="check-value">${status}</div>
+                `;
+                container.appendChild(item);
+
+                log(`${feature.name}: ${status}`, supported ? 'success' : 'error');
+            });
+        }
+
+        async function testLogin() {
+            log('测试登录接口...', 'info');
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'admin123'
+                    })
+                });
+                const data = await response.json();
+
+                if (data.token) {
+                    log('✅ 登录成功', 'success');
+                    localStorage.setItem('debug_token', data.token);
+                    return data.token;
+                } else {
+                    log('❌ 登录失败: 未收到 token', 'error');
+                    return null;
+                }
+            } catch (error) {
+                log(`❌ 登录错误: ${error.message}`, 'error');
+                return null;
+            }
+        }
+
+        async function testAllAPIs() {
+            log('开始测试所有 API...', 'info');
+            const container = document.getElementById('api-results');
+            container.innerHTML = '';
+
+            const token = await testLogin();
+            if (!token) {
+                log('无法获取 token，跳过需要认证的测试', 'warn');
+            }
+
+            const apis = [
+                { name: '健康检查', url: '/health', auth: false },
+                { name: '系统摘要', url: '/api/system/summary', auth: true },
+                { name: 'CPU 信息', url: '/api/system/cpu', auth: true },
+                { name: '内存信息', url: '/api/system/memory', auth: true },
+                { name: '文件列表', url: '/api/files/list?path=%2Ftmp', auth: true },
+                { name: '任务列表', url: '/api/tasks', auth: true },
+                { name: '网站列表', url: '/api/websites/list', auth: true },
+                { name: '数据库列表', url: '/api/database/list', auth: true }
+            ];
+
+            for (const api of apis) {
+                const item = document.createElement('div');
+                item.className = 'check-item';
+
+                try {
+                    const headers = {};
+                    if (api.auth && token) {
+                        headers['Authorization'] = `Bearer ${token}`;
+                    }
+
+                    const response = await fetch(`${API_BASE_URL}${api.url}`, {
+                        method: 'GET',
+                        headers
+                    });
+
+                    if (response.ok) {
+                        item.innerHTML = `
+                            <div class="check-icon ok">✓</div>
+                            <div class="check-label">${api.name}</div>
+                            <div class="check-value">✅ ${response.status}</div>
+                        `;
+                        log(`✅ ${api.name}: ${response.status}`, 'success');
+                    } else {
+                        item.innerHTML = `
+                            <div class="check-icon error">✗</div>
+                            <div class="check-label">${api.name}</div>
+                            <div class="check-value">❌ ${response.status}</div>
+                        `;
+                        log(`❌ ${api.name}: ${response.status}`, 'error');
+                    }
+                } catch (error) {
+                    item.innerHTML = `
+                        <div class="check-icon error">✗</div>
+                        <div class="check-label">${api.name}</div>
+                        <div class="check-value">❌ 错误</div>
+                    `;
+                    log(`❌ ${api.name}: ${error.message}`, 'error');
+                }
+
+                container.appendChild(item);
+            }
+        }
+
+        function clearResults() {
+            document.getElementById('connection-checks').innerHTML = '';
+            document.getElementById('browser-checks').innerHTML = '';
+            document.getElementById('api-results').innerHTML = '';
+            consoleOutput.innerHTML = '';
+            checkResults = { ok: 0, error: 0, warning: 0 };
+            log('结果已清除', 'info');
+        }
+
+        function showEnvInfo() {
+            const container = document.getElementById('env-info');
+            const info = [
+                { label: '前端地址', value: FRONTEND_URL },
+                { label: '后端地址', value: API_BASE_URL },
+                { label: '用户代理', value: navigator.userAgent.split(' ')[0] },
+                { label: '平台', value: navigator.platform },
+                { label: '语言', value: navigator.language },
+                { label: '屏幕分辨率', value: `${screen.width}x${screen.height}` },
+                { label: 'Cookie 启用', value: navigator.cookieEnabled ? '是' : '否' },
+                { label: '在线状态', value: navigator.onLine ? '是' : '否' }
+            ];
+
+            info.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'info-item';
+                div.innerHTML = `
+                    <div class="info-label">${item.label}</div>
+                    <div class="info-value">${item.value}</div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function showSuggestions() {
+            const container = document.getElementById('suggestions');
+            const suggestions = [
+                { title: '页面无法加载', solution: '检查前端服务是否运行: npm run dev' },
+                { title: 'API 请求失败', solution: '检查后端服务是否运行: npm run dev (在 backend 目录)' },
+                { title: 'CORS 错误', solution: '确保后端 CORS 配置允许前端地址' },
+                { title: '登录失败', solution: '确认使用默认账号: admin / admin123' },
+                { title: 'Token 过期', solution: '清除 LocalStorage 并重新登录' },
+                { title: '浏览器不兼容', solution: '使用最新版本的 Chrome、Firefox 或 Safari' }
+            ];
+
+            suggestions.forEach(item => {
+                const div = document.createElement('div');
+                div.style.cssText = 'padding: 15px; background: #f5f5f5; border-radius: 8px; margin-bottom: 10px;';
+                div.innerHTML = `
+                    <div style="font-weight: bold; color: #333; margin-bottom: 5px;">${item.title}</div>
+                    <div style="color: #666; font-size: 14px;">💡 ${item.solution}</div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // 页面加载时自动运行检查
+        window.onload = () => {
+            log('🚀 调试工具已启动', 'info');
+            log('📍 前端地址: ' + FRONTEND_URL, 'info');
+            log('📍 后端地址: ' + API_BASE_URL, 'info');
+
+            showEnvInfo();
+            showSuggestions();
+            checkConnection();
+            checkBrowserCompatibility();
+
+            log('✅ 初始检查完成', 'success');
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>浏览器快速测试</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #000; color: #0f0; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        #log { background: #111; padding: 10px; height: 300px; margin-top: 20px; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <h1>浏览器连接快速测试</h1>
+    <button onclick="testConnection()">测试浏览器连接</button>
+    <div id="log"></div>
+
+    <script>
+        function log(msg) {
+            const time = new Date().toISOString();
+            document.getElementById('log').innerHTML += `[${time}] ${msg}<br>`;
+        }
+
+        async function testConnection() {
+            log('=== 开始测试 ===');
+
+            // 1. 获取token
+            log('1. 获取token...');
+            const tokenResp = await fetch('http://localhost:3001/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: 'admin', password: 'admin123' })
+            });
+
+            if (!tokenResp.ok) {
+                log('✗ Token获取失败');
+                return;
+            }
+
+            const tokenData = await tokenResp.json();
+            const token = tokenData.token;
+            log('✓ Token obtained');
+
+            // 2. 获取浏览器标签
+            log('2. 获取浏览器标签...');
+            const targetsResp = await fetch('http://localhost:3001/api/browser/targets', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (!targetsResp.ok) {
+                log('✗ 获取标签失败');
+                return;
+            }
+
+            const targets = await targetsResp.json();
+            log(`✓ 找到 ${targets.length} 个标签`);
+
+            if (targets.length === 0) {
+                log('✗ 没有可用的浏览器标签');
+                log('');
+                log('请启动Chrome:');
+                log('/Applications/Google\\ Chrome.app/Contents/MacOS/Google\\ Chrome \\');
+                log('  --remote-debugging-port=9222 \\');
+                log('  --user-data-dir=/tmp/chrome-debug');
+                return;
+            }
+
+            const target = targets[0];
+            log(`→ 标签: ${target.title}`);
+            log(`   URL: ${target.url}`);
+            log(`   ID: ${target.id}`);
+
+            // 3. WebSocket连接
+            log('3. 建立WebSocket连接...');
+            const ws = new WebSocket(`ws://localhost:3001/ws/browser?token=${token}&targetId=${target.id}`);
+
+            ws.onopen = () => {
+                log('✓ WebSocket已连接');
+                log('→ 等待ready消息...');
+            };
+
+            let messageCount = 0;
+            let screenshotReceived = false;
+
+            ws.onmessage = (event) => {
+                messageCount++;
+                try {
+                    const msg = JSON.parse(event.data);
+                    log(`✓ 收到消息 #${messageCount}: ${msg.type}`);
+
+                    if (msg.type === 'ready') {
+                        log(`  会话ID: ${msg.sessionId}`);
+                        log('  → 发送截图请求...');
+                        ws.send(JSON.stringify({ type: 'startScreenshot', data: { fps: 1 } }));
+                    }
+
+                    if (msg.type === 'screenshot') {
+                        screenshotReceived = true;
+                        log(`  ✓ 截图已接收! (${msg.data.length} bytes)`);
+                        setTimeout(() => {
+                            ws.close();
+                        }, 1000);
+                    }
+
+                    if (msg.type === 'error') {
+                        log(`  ✗ 错误: ${msg.message}`);
+                        ws.close();
+                    }
+                } catch (e) {
+                    log(`  ✗ 消息解析错误: ${e.message}`);
+                }
+            };
+
+            ws.onerror = (error) => {
+                log('✗ WebSocket错误');
+                log(`  错误: ${JSON.stringify(error)}`);
+            };
+
+            ws.onclose = () => {
+                log('✓ WebSocket已关闭');
+                log('');
+                log('=== 测试结果 ===');
+                log(`总消息数: ${messageCount}`);
+                log(`截图状态: ${screenshotReceived ? '✓ 成功' : '✗ 失败'}`);
+
+                if (messageCount >= 2 && screenshotReceived) {
+                    log('');
+                    log('✅✅✅ 测试成功! 浏览器连接正常工作!');
+                    log('');
+                    log('如果你在前端页面仍看到"未连接":');
+                    log('1. 刷新浏览器页面 (F5 或 Cmd+R)');
+                    log('2. 确保Chrome正在运行 (已有1个标签)');
+                    log('3. 点击左侧的标签项 (必须点击标签项!)');
+                    log('4. 等待2-3秒让连接和截图加载');
+                    log('5. 状态应变为"已连接"并显示画面');
+                } else {
+                    log('✗ 测试失败 - 请检查后端日志');
+                }
+            };
+
+            // 超时
+            setTimeout(() => {
+                if (ws.readyState === WebSocket.OPEN) {
+                    ws.close();
+                }
+            }, 10000);
+        }
+    </script>
+</body>
+</html>

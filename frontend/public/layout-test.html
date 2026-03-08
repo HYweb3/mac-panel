@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>布局测试</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .test-result {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1890ff;
+            margin-bottom: 20px;
+        }
+        .status {
+            padding: 10px 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        .success {
+            background: #f6ffed;
+            border: 1px solid #b7eb8f;
+            color: #52c41a;
+        }
+        .info {
+            background: #e6f7ff;
+            border: 1px solid #91d5ff;
+            color: #1890ff;
+        }
+        ul {
+            margin-left: 20px;
+        }
+        li {
+            margin: 8px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-result">
+        <h1>✅ 布局样式修复完成</h1>
+
+        <div class="status success">
+            <strong>已修复以下问题:</strong>
+        </div>
+
+        <ul>
+            <li>✅ 移除了 body 的 flex 布局（会导致内容居中错位）</li>
+            <li>✅ 修复了侧边栏固定定位（fixed position）</li>
+            <li>✅ 修复了头部固定定位和层级</li>
+            <li>✅ 修复了内容区域滚动和溢出</li>
+            <li>✅ 添加了完整的响应式支持</li>
+        </ul>
+
+        <div class="status info">
+            <strong>现在请刷新主页面查看效果</strong>
+        </div>
+
+        <p>访问: <a href="http://localhost:5173" target="_blank">http://localhost:5173</a></p>
+
+        <div style="margin-top: 30px; padding: 15px; background: #f5f5f5; border-radius: 4px;">
+            <strong>布局说明:</strong>
+            <ul style="margin-top: 10px;">
+                <li>侧边栏: 固定在左侧 (220px 宽)</li>
+                <li>头部: 固定在顶部 (64px 高)</li>
+                <li>内容区: 自动滚动，自适应宽度</li>
+                <li>响应式: 移动端侧边栏自动隐藏</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // 自动跳转到主页面
+        setTimeout(() => {
+            if (confirm('布局样式已修复！是否立即刷新主页面查看效果？')) {
+                window.open('http://localhost:5173', '_blank');
+            }
+        }, 2000);
+    </script>
+</body>
+</html>

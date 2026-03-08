@@ -1,0 +1,38 @@
+[
+  {
+    "path": "/Users/www1/111/hnbwww.txt",
+    "name": "hnbwww.txt",
+    "type": "file",
+    "createdAt": "2026-03-06T14:18:59.759Z"
+  },
+  {
+    "path": "/Users/www1/111/新建文件夹",
+    "name": "新建文件夹",
+    "type": "directory",
+    "createdAt": "2026-03-06T14:19:04.244Z"
+  },
+  {
+    "path": "/Users/www1/.openclaw/workspace/MEMORY.md",
+    "name": "MEMORY.md",
+    "type": "file",
+    "createdAt": "2026-03-06T19:29:27.506Z"
+  },
+  {
+    "path": "/Users/www1/Desktop/claude/mac-panel",
+    "name": "mac-panel",
+    "type": "directory",
+    "createdAt": "2026-03-07T07:57:59.433Z"
+  },
+  {
+    "path": "/Users/www1/www/wwwroot/ai.ai9188.us/docs/README.md",
+    "name": "README.md",
+    "type": "file",
+    "createdAt": "2026-03-08T09:16:14.428Z"
+  },
+  {
+    "path": "/Users/www1/Desktop/claude/mac-panel/INSTALL.md",
+    "name": "INSTALL.md",
+    "type": "file",
+    "createdAt": "2026-03-08T10:39:48.834Z"
+  }
+]

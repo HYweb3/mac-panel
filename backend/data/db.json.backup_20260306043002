@@ -1,0 +1,2018 @@
+{
+  "users": [
+    {
+      "id": "user_admin",
+      "username": "admin",
+      "password_hash": "$2a$10$5wyrXq.0.N9cydeXJAvBRe5kynGffS847BKwdCHJVGfd3FJd5HMgq",
+      "email": "admin@localhost",
+      "role_id": "role_admin",
+      "created_at": "2026-03-05T16:19:02.447Z",
+      "updated_at": "2026-03-05T17:07:56.347Z",
+      "status": "active"
+    }
+  ],
+  "roles": [
+    {
+      "id": "role_admin",
+      "name": "admin",
+      "description": "系统管理员",
+      "permissions": [
+        "*"
+      ],
+      "created_at": "2026-03-05T16:19:02.393Z"
+    },
+    {
+      "id": "role_user",
+      "name": "user",
+      "description": "普通用户",
+      "permissions": [
+        "files:read",
+        "files:write",
+        "files:create",
+        "files:delete",
+        "websites:read",
+        "database:read"
+      ],
+      "created_at": "2026-03-05T16:19:02.393Z"
+    },
+    {
+      "id": "role_viewer",
+      "name": "viewer",
+      "description": "只读用户",
+      "permissions": [
+        "*:read"
+      ],
+      "created_at": "2026-03-05T16:19:02.393Z"
+    }
+  ],
+  "operation_logs": [
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772727557706_4t7qqrbqf",
+      "created_at": "2026-03-05T16:19:17.706Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772727565467_47weedsk8",
+      "created_at": "2026-03-05T16:19:25.467Z"
+    },
+    {
+      "user_id": "anonymous",
+      "username": "anonymous",
+      "action": "POST",
+      "resource": "/",
+      "details": "{\"body\":{\"name\":\"测试任务\",\"type\":\"shell\",\"command\":\"echo Hello Mac Panel\",\"cron_expression\":\"* * * * *\",\"enabled\":false},\"query\":{},\"params\":{}}",
+      "ip": "::1",
+      "status": "failed",
+      "id": "log_1772727579645_a1v6rq5vj",
+      "created_at": "2026-03-05T16:19:39.645Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "create",
+      "resource": "tasks",
+      "details": "{\"taskId\":\"task_1772727593157\",\"taskName\":\"系统备份测试\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772727593158_1ir5e5iy6",
+      "created_at": "2026-03-05T16:19:53.158Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/",
+      "details": "{\"body\":{\"name\":\"系统备份测试\",\"type\":\"shell\",\"command\":\"echo \\\"Backup completed\\\" && date\",\"cron_expression\":\"0 0 * * *\",\"enabled\":false},\"query\":{},\"params\":{},\"response\":\"{\\\"name\\\":\\\"系统备份测试\\\",\\\"type\\\":\\\"shell\\\",\\\"cron_expression\\\":\\\"0 0 * * *\\\",\\\"enabled\\\":false,\\\"command\\\":\\\"echo \\\\\\\"Backup completed\\\\\\\" && date\\\",\\\"method\\\":\\\"GET\\\",\\\"retry_times\\\":0,\\\"timeout\\\":300000,\\\"timezone\\\":\\\"Asia/Shanghai\\\",\\\"id\\\":\\\"task_1772727593157\\\",\\\"created_at\\\":\\\"2026-03-05T16:19:53.157Z\\\",\\\"updated_at\\\":\\\"2026-03-05T16:19:53.157Z\\\"}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772727593158_45jb1u4dr",
+      "created_at": "2026-03-05T16:19:53.158Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/create",
+      "details": "{\"body\":{\"domain\":\"test.com\",\"rootDir\":\"/www/wwwroot/test.com\",\"phpVersion\":\"none\",\"port\":80},\"query\":{},\"params\":{},\"response\":\"{\\\"id\\\":\\\"1772727675719\\\",\\\"domain\\\":\\\"test.com\\\",\\\"rootDir\\\":\\\"/www/wwwroot/test.com\\\",\\\"phpVersion\\\":\\\"none\\\",\\\"port\\\":80,\\\"ssl\\\":false,\\\"createdAt\\\":\\\"2026-03-05T16:21:15.719Z\\\"}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772727675720_f0wwcggth",
+      "created_at": "2026-03-05T16:21:15.720Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/create",
+      "details": "{\"body\":{\"name\":\"testdb\",\"type\":\"mysql\",\"username\":\"root\",\"password\":\"***REDACTED***\"},\"query\":{},\"params\":{},\"response\":\"{\\\"id\\\":\\\"1772727675748\\\",\\\"name\\\":\\\"testdb\\\",\\\"type\\\":\\\"mysql\\\",\\\"username\\\":\\\"root\\\",\\\"password\\\":\\\"password\\\",\\\"createdAt\\\":\\\"2026-03-05T16:21:15.748Z\\\"}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772727675748_ici0fxvq5",
+      "created_at": "2026-03-05T16:21:15.748Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/create",
+      "details": "{\"body\":{\"path\":\"/tmp/mac-panel-test\",\"type\":\"directory\"},\"query\":{},\"params\":{}}",
+      "ip": "::1",
+      "status": "failed",
+      "id": "log_1772727687137_lcgkywt1h",
+      "created_at": "2026-03-05T16:21:27.137Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/create",
+      "details": "{\"body\":{\"path\":\"/tmp\",\"type\":\"directory\",\"name\":\"mac-panel-test\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true,\\\"path\\\":\\\"/tmp/mac-panel-test\\\"}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772727709323_ziydrw2jw",
+      "created_at": "2026-03-05T16:21:49.323Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/create",
+      "details": "{\"body\":{\"path\":\"/tmp/mac-panel-test\",\"type\":\"file\",\"name\":\"test.txt\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true,\\\"path\\\":\\\"/tmp/mac-panel-test/test.txt\\\"}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772727709391_5pahyb31y",
+      "created_at": "2026-03-05T16:21:49.391Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/compress",
+      "details": "{\"body\":{\"paths\":[\"/tmp/mac-panel-test\"],\"targetPath\":\"/tmp/mac-panel-test.zip\",\"format\":\"zip\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true,\\\"size\\\":128}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772727717970_hiuocjyqg",
+      "created_at": "2026-03-05T16:21:57.970Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772727722633_hcij16b1z",
+      "created_at": "2026-03-05T16:22:02.633Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772727756055_9hsurdweg",
+      "created_at": "2026-03-05T16:22:36.055Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/create",
+      "details": "{\"body\":{\"path\":\"/tmp\",\"type\":\"directory\",\"name\":\"test-dir-13081\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true,\\\"path\\\":\\\"/tmp/test-dir-13081\\\"}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772727756084_33ijhkfh6",
+      "created_at": "2026-03-05T16:22:36.084Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/create",
+      "details": "{\"body\":{\"path\":\"/tmp/test-dir-13081\",\"type\":\"file\",\"name\":\"test.txt\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true,\\\"path\\\":\\\"/tmp/test-dir-13081/test.txt\\\"}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772727756093_9zz1ebg3j",
+      "created_at": "2026-03-05T16:22:36.093Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/compress",
+      "details": "{\"body\":{\"paths\":[\"/tmp/test-dir-13081\"],\"targetPath\":\"/tmp/test-13081.zip\",\"format\":\"zip\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true,\\\"size\\\":128}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772727756105_8n7hzisom",
+      "created_at": "2026-03-05T16:22:36.105Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772728015630_31fvom30n",
+      "created_at": "2026-03-05T16:26:55.630Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772728053258_9z6ztke0y",
+      "created_at": "2026-03-05T16:27:33.258Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772728516418_tk3mwxhjc",
+      "created_at": "2026-03-05T16:35:16.418Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772728523547_59o3q82lr",
+      "created_at": "2026-03-05T16:35:23.547Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "create",
+      "resource": "tasks",
+      "details": "{\"taskId\":\"task_1772728532839\",\"taskName\":\"测试任务\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772728532839_jg56m0tqa",
+      "created_at": "2026-03-05T16:35:32.839Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/",
+      "details": "{\"body\":{\"name\":\"测试任务\",\"type\":\"shell\",\"command\":\"echo Hello Mac Panel\",\"cron_expression\":\"*/5 * * * *\",\"enabled\":false},\"query\":{},\"params\":{},\"response\":\"{\\\"name\\\":\\\"测试任务\\\",\\\"type\\\":\\\"shell\\\",\\\"cron_expression\\\":\\\"*/5 * * * *\\\",\\\"enabled\\\":false,\\\"command\\\":\\\"echo Hello Mac Panel\\\",\\\"method\\\":\\\"GET\\\",\\\"retry_times\\\":0,\\\"timeout\\\":300000,\\\"timezone\\\":\\\"Asia/Shanghai\\\",\\\"id\\\":\\\"task_1772728532839\\\",\\\"created_at\\\":\\\"2026-03-05T16:35:32.839Z\\\",\\\"updated_at\\\":\\\"2026-03-05T16:35:32.839Z\\\"}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772728532840_tiiv0qrx1",
+      "created_at": "2026-03-05T16:35:32.840Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772728763814_jh5njan15",
+      "created_at": "2026-03-05T16:39:23.814Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772730237554_wk55op6or",
+      "created_at": "2026-03-05T17:03:57.554Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772730240477_ec57p0eef",
+      "created_at": "2026-03-05T17:04:00.477Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772730440917_2u3jw1bz1",
+      "created_at": "2026-03-05T17:07:20.917Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772730441186_mguw1z1tk",
+      "created_at": "2026-03-05T17:07:21.186Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "create",
+      "resource": "tasks",
+      "details": "{\"taskId\":\"task_1772730455738\",\"taskName\":\"API测试任务\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772730455738_acquk94vy",
+      "created_at": "2026-03-05T17:07:35.738Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/",
+      "details": "{\"body\":{\"name\":\"API测试任务\",\"type\":\"shell\",\"command\":\"date\",\"cron_expression\":\"0 * * * *\",\"enabled\":false},\"query\":{},\"params\":{},\"response\":\"{\\\"name\\\":\\\"API测试任务\\\",\\\"type\\\":\\\"shell\\\",\\\"cron_expression\\\":\\\"0 * * * *\\\",\\\"enabled\\\":false,\\\"command\\\":\\\"date\\\",\\\"method\\\":\\\"GET\\\",\\\"retry_times\\\":0,\\\"timeout\\\":300000,\\\"timezone\\\":\\\"Asia/Shanghai\\\",\\\"id\\\":\\\"task_1772730455738\\\",\\\"created_at\\\":\\\"2026-03-05T17:07:35.738Z\\\",\\\"updated_at\\\":\\\"2026-03-05T17:07:35.738Z\\\"}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772730455739_3hp724xzp",
+      "created_at": "2026-03-05T17:07:35.739Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/create",
+      "details": "{\"body\":{\"path\":\"/tmp\",\"type\":\"directory\",\"name\":\"api-test-folder\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true,\\\"path\\\":\\\"/tmp/api-test-folder\\\"}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772730459326_1xqssf0eb",
+      "created_at": "2026-03-05T17:07:39.326Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "execute",
+      "resource": "tasks",
+      "details": "{\"taskId\":\"task_1772730455738\",\"taskName\":\"API测试任务\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772730463236_qzs44co0v",
+      "created_at": "2026-03-05T17:07:43.236Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/task_1772730455738/execute",
+      "details": "{\"body\":{},\"query\":{},\"params\":{\"id\":\"task_1772730455738\"},\"response\":\"{\\\"success\\\":true,\\\"message\\\":\\\"Task execution started\\\"}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772730463239_9agc8szu3",
+      "created_at": "2026-03-05T17:07:43.239Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "toggle",
+      "resource": "tasks",
+      "details": "{\"taskId\":\"task_1772730455738\",\"enabled\":true}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772730463252_7sf396blv",
+      "created_at": "2026-03-05T17:07:43.252Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/task_1772730455738/toggle",
+      "details": "{\"body\":{},\"query\":{},\"params\":{\"id\":\"task_1772730455738\"},\"response\":\"{\\\"success\\\":true,\\\"enabled\\\":true}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772730463252_gz70etc3p",
+      "created_at": "2026-03-05T17:07:43.252Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/create",
+      "details": "{\"body\":{\"domain\":\"test-api.com\",\"rootDir\":\"/www/test\",\"phpVersion\":\"none\",\"port\":8080},\"query\":{},\"params\":{},\"response\":\"{\\\"id\\\":\\\"1772730467568\\\",\\\"domain\\\":\\\"test-api.com\\\",\\\"rootDir\\\":\\\"/www/test\\\",\\\"phpVersion\\\":\\\"none\\\",\\\"port\\\":8080,\\\"ssl\\\":false,\\\"createdAt\\\":\\\"2026-03-05T17:07:47.568Z\\\"}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772730467569_2lcnpy4k3",
+      "created_at": "2026-03-05T17:07:47.569Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/create",
+      "details": "{\"body\":{\"name\":\"testdb\",\"type\":\"mysql\",\"host\":\"localhost\",\"port\":3306,\"username\":\"root\",\"password\":\"***REDACTED***\"},\"query\":{},\"params\":{},\"response\":\"{\\\"id\\\":\\\"1772730467597\\\",\\\"name\\\":\\\"testdb\\\",\\\"type\\\":\\\"mysql\\\",\\\"username\\\":\\\"root\\\",\\\"password\\\":\\\"password\\\",\\\"createdAt\\\":\\\"2026-03-05T17:07:47.597Z\\\"}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772730467598_loj0yptz6",
+      "created_at": "2026-03-05T17:07:47.598Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/compress",
+      "details": "{\"body\":{\"paths\":[\"/tmp/api-test-folder\"],\"targetPath\":\"/tmp/api-test.zip\",\"format\":\"zip\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true,\\\"size\\\":130}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772730467628_vemqcdx2y",
+      "created_at": "2026-03-05T17:07:47.628Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/upload",
+      "details": "{\"body\":{},\"query\":{},\"params\":{}}",
+      "ip": "::1",
+      "status": "failed",
+      "id": "log_1772730467651_juyou7faj",
+      "created_at": "2026-03-05T17:07:47.651Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "update",
+      "resource": "tasks",
+      "details": "{\"taskId\":\"task_1772730455738\",\"updates\":{\"name\":\"更新的任务名称\",\"enabled\":false}}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772730472358_p8x18ug4s",
+      "created_at": "2026-03-05T17:07:52.358Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "PUT",
+      "resource": "/task_1772730455738",
+      "details": "{\"body\":{\"name\":\"更新的任务名称\",\"enabled\":false},\"query\":{},\"params\":{\"id\":\"task_1772730455738\"},\"response\":\"{\\\"success\\\":true}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772730472358_vb8y6o4ux",
+      "created_at": "2026-03-05T17:07:52.358Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "delete",
+      "resource": "tasks",
+      "details": "{\"taskId\":\"task_1772730455738\",\"taskName\":\"更新的任务名称\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772730472387_oqrom4g3a",
+      "created_at": "2026-03-05T17:07:52.387Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "DELETE",
+      "resource": "/task_1772730455738",
+      "details": "{\"body\":{},\"query\":{},\"params\":{\"id\":\"task_1772730455738\"},\"response\":\"{\\\"success\\\":true}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772730472387_tnzatpptk",
+      "created_at": "2026-03-05T17:07:52.387Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "change_password",
+      "resource": "/api/auth/change-password",
+      "details": "{}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772730472550_xtdm6q5w3",
+      "created_at": "2026-03-05T17:07:52.550Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "change_password",
+      "resource": "/api/auth/change-password",
+      "details": "{}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772730476348_6aim79qs6",
+      "created_at": "2026-03-05T17:07:56.348Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772730541567_5hdgtdhoo",
+      "created_at": "2026-03-05T17:09:01.567Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772730541675_2iifm0u9c",
+      "created_at": "2026-03-05T17:09:01.675Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772730546090_hgwmq6r96",
+      "created_at": "2026-03-05T17:09:06.090Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772730553298_f39x57i4f",
+      "created_at": "2026-03-05T17:09:13.298Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772730556508_u84xqvg3x",
+      "created_at": "2026-03-05T17:09:16.508Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772730736421_9c89i0god",
+      "created_at": "2026-03-05T17:12:16.421Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772730748791_z5deslqsw",
+      "created_at": "2026-03-05T17:12:28.791Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772730963107_jk2by915a",
+      "created_at": "2026-03-05T17:16:03.107Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772730974973_ejh2qelvs",
+      "created_at": "2026-03-05T17:16:14.973Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772730978541_zk780n2w2",
+      "created_at": "2026-03-05T17:16:18.541Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772730991434_ektj3eawd",
+      "created_at": "2026-03-05T17:16:31.434Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772731345481_vk47udier",
+      "created_at": "2026-03-05T17:22:25.481Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772731361392_6q2dgous0",
+      "created_at": "2026-03-05T17:22:41.392Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772731366678_scr4iku0a",
+      "created_at": "2026-03-05T17:22:46.678Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772731538259_5qf4shu70",
+      "created_at": "2026-03-05T17:25:38.259Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772731567780_iqjoy4xtd",
+      "created_at": "2026-03-05T17:26:07.780Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772731964627_3upkegpl4",
+      "created_at": "2026-03-05T17:32:44.627Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772731966812_7u3xxhlqs",
+      "created_at": "2026-03-05T17:32:46.812Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772731968632_4nxocbktc",
+      "created_at": "2026-03-05T17:32:48.632Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772731970345_2uzmqppju",
+      "created_at": "2026-03-05T17:32:50.345Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772732038883_nhrgq2jp7",
+      "created_at": "2026-03-05T17:33:58.883Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/create",
+      "details": "{\"body\":{\"domain\":\"ai99.us\",\"rootDir\":\"/www/wwwroot/ai99.us\",\"phpVersion\":\"none\",\"port\":80},\"query\":{},\"params\":{},\"response\":\"{\\\"domain\\\":\\\"ai99.us\\\",\\\"root_dir\\\":\\\"/www/wwwroot/ai99.us\\\",\\\"php_version\\\":\\\"none\\\",\\\"port\\\":80,\\\"ssl\\\":false,\\\"id\\\":\\\"web_1772732365559\\\",\\\"created_at\\\":\\\"2026-03-05T17:39:25.559Z\\\",\\\"updated_at\\\":\\\"2026-03-05T17:39:25.559Z\\\"}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772732365563_s4uokpp0g",
+      "created_at": "2026-03-05T17:39:25.563Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "PUT",
+      "resource": "/web_1772732365559",
+      "details": "{\"body\":{\"domain\":\"ai99.us\",\"rootDir\":\"/www/wwwroot/ai99.us\",\"phpVersion\":\"none\",\"port\":80},\"query\":{},\"params\":{\"id\":\"web_1772732365559\"},\"response\":\"{\\\"domain\\\":\\\"ai99.us\\\",\\\"root_dir\\\":\\\"/www/wwwroot/ai99.us\\\",\\\"php_version\\\":\\\"none\\\",\\\"port\\\":80,\\\"ssl\\\":false,\\\"id\\\":\\\"web_1772732365559\\\",\\\"created_at\\\":\\\"2026-03-05T17:39:25.559Z\\\",\\\"updated_at\\\":\\\"2026-03-05T17:39:34.003Z\\\",\\\"rootDir\\\":\\\"/www/wwwroot/ai99.us\\\",\\\"phpVersion\\\":\\\"none\\\"}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772732374004_px53zt34w",
+      "created_at": "2026-03-05T17:39:34.004Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772732699284_9dy6xd59p",
+      "created_at": "2026-03-05T17:44:59.284Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "execute",
+      "resource": "tasks",
+      "details": "{\"taskId\":\"task_1772728532839\",\"taskName\":\"测试任务\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772732843016_p33mo2032",
+      "created_at": "2026-03-05T17:47:23.016Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/task_1772728532839/execute",
+      "details": "{\"body\":{},\"query\":{},\"params\":{\"id\":\"task_1772728532839\"},\"response\":\"{\\\"success\\\":true,\\\"message\\\":\\\"Task execution started\\\"}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772732843018_p1kactudq",
+      "created_at": "2026-03-05T17:47:23.018Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772734335378_3qhavov9d",
+      "created_at": "2026-03-05T18:12:15.378Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772734345247_awfhwsbdh",
+      "created_at": "2026-03-05T18:12:25.247Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772734527475_p3e2so2da",
+      "created_at": "2026-03-05T18:15:27.475Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/create",
+      "details": "{\"body\":{\"path\":\"/Users/www1\",\"type\":\"directory\",\"name\":\"test\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true,\\\"path\\\":\\\"/Users/www1/test\\\"}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772735005851_1l12ydkkw",
+      "created_at": "2026-03-05T18:23:25.851Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/copy",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/.cache\",\"destinationPath\":\"/Users/www1/test/.cache\"},\"query\":{},\"params\":{}}",
+      "ip": "::1",
+      "status": "failed",
+      "id": "log_1772735026715_wm3d5fv3c",
+      "created_at": "2026-03-05T18:23:46.715Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/copy",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/.claude\",\"destinationPath\":\"/Users/www1/test/.claude\"},\"query\":{},\"params\":{}}",
+      "ip": "::1",
+      "status": "failed",
+      "id": "log_1772735026718_bqvqu3jap",
+      "created_at": "2026-03-05T18:23:46.718Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/copy",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/.claude.json\",\"destinationPath\":\"/Users/www1/test/.claude.json\"},\"query\":{},\"params\":{}}",
+      "ip": "::1",
+      "status": "failed",
+      "id": "log_1772735026720_c5nnifywt",
+      "created_at": "2026-03-05T18:23:46.720Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/create",
+      "details": "{\"body\":{\"path\":\"/Users/www1/test\",\"type\":\"file\",\"name\":\"qq\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true,\\\"path\\\":\\\"/Users/www1/test/qq\\\"}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772735062704_xp79583tr",
+      "created_at": "2026-03-05T18:24:22.704Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/save",
+      "details": "{\"body\":{\"path\":\"/Users/www1/test/qq\",\"content\":\"fdfdfdsf\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772735083136_6tm8umeb0",
+      "created_at": "2026-03-05T18:24:43.136Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/create",
+      "details": "{\"body\":{\"path\":\"/Users/www1/test\",\"type\":\"directory\",\"name\":\"23\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true,\\\"path\\\":\\\"/Users/www1/test/23\\\"}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772735109111_hf0usrtjy",
+      "created_at": "2026-03-05T18:25:09.111Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/create",
+      "details": "{\"body\":{\"path\":\"/Users/www1/test/23\",\"type\":\"file\",\"name\":\"erwr\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true,\\\"path\\\":\\\"/Users/www1/test/23/erwr\\\"}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772735121676_bzvp07hge",
+      "created_at": "2026-03-05T18:25:21.676Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "execute",
+      "resource": "tasks",
+      "details": "{\"taskId\":\"task_1772728532839\",\"taskName\":\"测试任务\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772735287349_dsg7l08k8",
+      "created_at": "2026-03-05T18:28:07.349Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/task_1772728532839/execute",
+      "details": "{\"body\":{},\"query\":{},\"params\":{\"id\":\"task_1772728532839\"},\"response\":\"{\\\"success\\\":true,\\\"message\\\":\\\"Task execution started\\\"}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772735287363_3as1hc1p3",
+      "created_at": "2026-03-05T18:28:07.363Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "update",
+      "resource": "tasks",
+      "details": "{\"taskId\":\"task_1772728532839\",\"updates\":{\"name\":\"测试任务\",\"type\":\"shell\",\"command\":\"echo Hello Mac Panel\",\"cron_expression\":\"*/5 * * * *\",\"enabled\":true,\"retry_times\":0,\"timeout\":\"300\"}}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772735341382_bvb2wug3q",
+      "created_at": "2026-03-05T18:29:01.382Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "PUT",
+      "resource": "/task_1772728532839",
+      "details": "{\"body\":{\"name\":\"测试任务\",\"type\":\"shell\",\"command\":\"echo Hello Mac Panel\",\"cron_expression\":\"*/5 * * * *\",\"enabled\":true,\"retry_times\":0,\"timeout\":\"300\"},\"query\":{},\"params\":{\"id\":\"task_1772728532839\"},\"response\":\"{\\\"success\\\":true}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772735341384_vzeo1nk8o",
+      "created_at": "2026-03-05T18:29:01.384Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "execute",
+      "resource": "tasks",
+      "details": "{\"taskId\":\"task_1772728532839\",\"taskName\":\"测试任务\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772735489252_q75adpifi",
+      "created_at": "2026-03-05T18:31:29.252Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/task_1772728532839/execute",
+      "details": "{\"body\":{},\"query\":{},\"params\":{\"id\":\"task_1772728532839\"},\"response\":\"{\\\"success\\\":true,\\\"message\\\":\\\"Task execution started\\\"}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772735489257_5ylapmef9",
+      "created_at": "2026-03-05T18:31:29.257Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/compress",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test\",\"files\":[\"/Users/www1/test/23\",\"/Users/www1/test/qq\"],\"destinationPath\":\"/Users/www1/test/archive.zip\"},\"query\":{},\"params\":{}}",
+      "ip": "::1",
+      "status": "failed",
+      "id": "log_1772736001065_bu18yh18l",
+      "created_at": "2026-03-05T18:40:01.065Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/compress",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test\",\"files\":[\"/Users/www1/test/23\",\"/Users/www1/test/qq\"],\"destinationPath\":\"/Users/www1/test/archive.zip\"},\"query\":{},\"params\":{}}",
+      "ip": "::1",
+      "status": "failed",
+      "id": "log_1772736006664_ygtdwt4ew",
+      "created_at": "2026-03-05T18:40:06.664Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/compress",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test\",\"files\":[\"/Users/www1/test/23\",\"/Users/www1/test/qq\"],\"destinationPath\":\"/Users/www1/test/archive.zip\"},\"query\":{},\"params\":{}}",
+      "ip": "::1",
+      "status": "failed",
+      "id": "log_1772736011013_wb1x3dre1",
+      "created_at": "2026-03-05T18:40:11.013Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/rename",
+      "details": "{\"body\":{\"path\":\"/Users/www1/test/23\",\"newName\":\"234\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772736157188_lwzqg27zx",
+      "created_at": "2026-03-05T18:42:37.188Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/rename",
+      "details": "{\"body\":{\"path\":\"/Users/www1/test/qq\",\"newName\":\"qq9\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772736169250_dv48fkhjg",
+      "created_at": "2026-03-05T18:42:49.250Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/create",
+      "details": "{\"body\":{\"path\":\"/Users/www1/test/234\",\"type\":\"file\",\"name\":\"test\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true,\\\"path\\\":\\\"/Users/www1/test/234/test\\\"}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772736264206_r31loa18q",
+      "created_at": "2026-03-05T18:44:24.206Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/create",
+      "details": "{\"body\":{\"path\":\"/Users/www1/test/234\",\"type\":\"directory\",\"name\":\"eer\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true,\\\"path\\\":\\\"/Users/www1/test/234/eer\\\"}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772736272174_9vpx831qj",
+      "created_at": "2026-03-05T18:44:32.174Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/compress",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test/234\",\"files\":[\"/Users/www1/test/234/eer\",\"/Users/www1/test/234/erwr\",\"/Users/www1/test/234/test\"],\"destinationPath\":\"/Users/www1/test/234/archive.zip\"},\"query\":{},\"params\":{}}",
+      "ip": "::1",
+      "status": "failed",
+      "id": "log_1772736279920_4tvwj58s4",
+      "created_at": "2026-03-05T18:44:39.920Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/compress",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test/234\",\"files\":[\"/Users/www1/test/234/eer\",\"/Users/www1/test/234/erwr\",\"/Users/www1/test/234/test\"],\"destinationPath\":\"/Users/www1/test/234/archive.zip\"},\"query\":{},\"params\":{}}",
+      "ip": "::1",
+      "status": "failed",
+      "id": "log_1772736281332_0chpnyt5i",
+      "created_at": "2026-03-05T18:44:41.332Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/compress",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test/234\",\"files\":[\"/Users/www1/test/234/eer\",\"/Users/www1/test/234/erwr\",\"/Users/www1/test/234/test\"],\"destinationPath\":\"/Users/www1/test/234/archive.zip\"},\"query\":{},\"params\":{}}",
+      "ip": "::1",
+      "status": "failed",
+      "id": "log_1772736283399_3au8y9wj7",
+      "created_at": "2026-03-05T18:44:43.399Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/copy",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test/234/eer\",\"destinationPath\":\"/Users/www1/test/234/eer\"},\"query\":{},\"params\":{}}",
+      "ip": "::1",
+      "status": "failed",
+      "id": "log_1772736299818_ukta0sytf",
+      "created_at": "2026-03-05T18:44:59.818Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/copy",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test/234/erwr\",\"destinationPath\":\"/Users/www1/test/234/erwr\"},\"query\":{},\"params\":{}}",
+      "ip": "::1",
+      "status": "failed",
+      "id": "log_1772736299820_wfeg15bqm",
+      "created_at": "2026-03-05T18:44:59.820Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/copy",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test/234/test\",\"destinationPath\":\"/Users/www1/test/234/test\"},\"query\":{},\"params\":{}}",
+      "ip": "::1",
+      "status": "failed",
+      "id": "log_1772736299821_28mq3jnrd",
+      "created_at": "2026-03-05T18:44:59.821Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/create",
+      "details": "{\"body\":{\"path\":\"/Users/www1/test/234\",\"type\":\"directory\",\"name\":\"yty\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true,\\\"path\\\":\\\"/Users/www1/test/234/yty\\\"}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772736310586_wox19g4bj",
+      "created_at": "2026-03-05T18:45:10.586Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/copy",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test/234/eer\",\"destinationPath\":\"/Users/www1/test/234/yty/eer\"},\"query\":{},\"params\":{}}",
+      "ip": "::1",
+      "status": "failed",
+      "id": "log_1772736315831_8f0y5sw7v",
+      "created_at": "2026-03-05T18:45:15.831Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/copy",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test/234/erwr\",\"destinationPath\":\"/Users/www1/test/234/yty/erwr\"},\"query\":{},\"params\":{}}",
+      "ip": "::1",
+      "status": "failed",
+      "id": "log_1772736315833_mnbsj9614",
+      "created_at": "2026-03-05T18:45:15.833Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/copy",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test/234/test\",\"destinationPath\":\"/Users/www1/test/234/yty/test\"},\"query\":{},\"params\":{}}",
+      "ip": "::1",
+      "status": "failed",
+      "id": "log_1772736315834_g9ylwcowd",
+      "created_at": "2026-03-05T18:45:15.834Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772736389180_nqbxbc1if",
+      "created_at": "2026-03-05T18:46:29.180Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772736426522_ikebrxpsd",
+      "created_at": "2026-03-05T18:47:06.522Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/copy",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/Desktop/claude/mac-panel/README.md\",\"targetPath\":\"/Users/www1/Desktop/claude/mac-panel/test-copy-README.md\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772736426531_vo8fdnyfb",
+      "created_at": "2026-03-05T18:47:06.531Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772736429612_v6blpm2ex",
+      "created_at": "2026-03-05T18:47:09.612Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/compress",
+      "details": "{\"body\":{\"paths\":[\"/Users/www1/Desktop/claude/mac-panel/CLAUDE.md\"],\"targetPath\":\"/Users/www1/Desktop/claude/mac-panel/test.zip\",\"format\":\"zip\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true,\\\"size\\\":872}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772736429625_hp3quddvi",
+      "created_at": "2026-03-05T18:47:09.625Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/api/files/upload",
+      "details": "{\"body\":{},\"query\":{\"path\":\"/Users/www1/test/234/yty\"},\"params\":{}}",
+      "ip": "::1",
+      "status": "failed",
+      "id": "log_1772736560115_kkhxrl2r6",
+      "created_at": "2026-03-05T18:49:20.115Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/api/files/upload",
+      "details": "{\"body\":{},\"query\":{\"path\":\"/Users/www1/test/234/yty\"},\"params\":{}}",
+      "ip": "::1",
+      "status": "failed",
+      "id": "log_1772736578462_msp7u8y2t",
+      "created_at": "2026-03-05T18:49:38.462Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772736588740_3hc7qkyky",
+      "created_at": "2026-03-05T18:49:48.740Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/download-url",
+      "details": "{\"body\":{\"url\":\"https://github.com/monaco-editor/monaco-editor/raw/main/README.md\",\"path\":\"/Users/www1/Desktop/claude/mac-panel\",\"filename\":\"monaco-readme.md\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":false,\\\"error\\\":\\\"Failed to download file: Not Found\\\"}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772736589637_gycm86yln",
+      "created_at": "2026-03-05T18:49:49.637Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/copy",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test/qq9\",\"targetPath\":\"/Users/www1/test/234/qq9\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772736767858_ze272am0w",
+      "created_at": "2026-03-05T18:52:47.858Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/copy",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test/234/eer\",\"targetPath\":\"/Users/www1/test/234/yty/eer\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772736785827_c45bzq6f7",
+      "created_at": "2026-03-05T18:53:05.827Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/copy",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test/234/erwr\",\"targetPath\":\"/Users/www1/test/234/yty/erwr\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772736785830_rs9aoy7yh",
+      "created_at": "2026-03-05T18:53:05.830Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/compress",
+      "details": "{\"body\":{\"paths\":[\"/Users/www1/test/234/yty/eer\",\"/Users/www1/test/234/yty/erwr\"],\"targetPath\":\"/Users/www1/test/234/yty/archive.zip\",\"format\":\"zip\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true,\\\"size\\\":208}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772736804565_nho8d7kpi",
+      "created_at": "2026-03-05T18:53:24.565Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/extract",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test/234/yty/archive.zip\",\"destinationPath\":\"/Users/www1/test/234/yty/o\"},\"query\":{},\"params\":{}}",
+      "ip": "::1",
+      "status": "failed",
+      "id": "log_1772736818206_bitdg9422",
+      "created_at": "2026-03-05T18:53:38.206Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/extract",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test/234/yty/archive.zip\",\"destinationPath\":\"/Users/www1/test/234/yty/o\"},\"query\":{},\"params\":{}}",
+      "ip": "::1",
+      "status": "failed",
+      "id": "log_1772736825828_9o7uk7t27",
+      "created_at": "2026-03-05T18:53:45.828Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/extract",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test/234/yty/archive.zip\",\"destinationPath\":\"/Users/www1/test/234/yty/o\"},\"query\":{},\"params\":{}}",
+      "ip": "::1",
+      "status": "failed",
+      "id": "log_1772736826826_3yhsagbuk",
+      "created_at": "2026-03-05T18:53:46.826Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/extract",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test/234/yty/archive.zip\",\"destinationPath\":\"/Users/www1/test/234/yty/o\"},\"query\":{},\"params\":{}}",
+      "ip": "::1",
+      "status": "failed",
+      "id": "log_1772736827831_eb0q8qmwr",
+      "created_at": "2026-03-05T18:53:47.831Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/extract",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test/234/yty/archive.zip\",\"destinationPath\":\"/Users/www1/test/234/yty/o\"},\"query\":{},\"params\":{}}",
+      "ip": "::1",
+      "status": "failed",
+      "id": "log_1772736828832_g2ae8ltof",
+      "created_at": "2026-03-05T18:53:48.832Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/extract",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test/234/yty/archive.zip\",\"destinationPath\":\"/Users/www1/test/234/yty/\"},\"query\":{},\"params\":{}}",
+      "ip": "::1",
+      "status": "failed",
+      "id": "log_1772736833459_jpc1ygb0s",
+      "created_at": "2026-03-05T18:53:53.459Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/extract",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test/234/yty/archive.zip\",\"destinationPath\":\"/Users/www1/test/234/yty/\"},\"query\":{},\"params\":{}}",
+      "ip": "::1",
+      "status": "failed",
+      "id": "log_1772736835244_sj7cl9ibj",
+      "created_at": "2026-03-05T18:53:55.244Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/extract",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test/234/yty/archive.zip\",\"destinationPath\":\"/Users/www1/test/234/yty/\"},\"query\":{},\"params\":{}}",
+      "ip": "::1",
+      "status": "failed",
+      "id": "log_1772736835847_098n6htem",
+      "created_at": "2026-03-05T18:53:55.847Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "upload",
+      "resource": "files",
+      "details": "{\"filename\":\"CLAUDE_1772736858892_83ac443b.md\",\"size\":1012,\"path\":\"/tmp/CLAUDE_1772736858892_83ac443b.md\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772736858893_r38pr6uyw",
+      "created_at": "2026-03-05T18:54:18.893Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/upload",
+      "details": "{\"body\":{\"path\":\"/Users/www1/test/234/yty\"},\"query\":{\"path\":\"/Users/www1/test/234/yty\"},\"params\":{},\"response\":\"{\\\"success\\\":true,\\\"files\\\":[{\\\"originalName\\\":\\\"CLAUDE.md\\\",\\\"filename\\\":\\\"CLAUDE_1772736858892_83ac443b.md\\\",\\\"path\\\":\\\"/tmp/CLAUDE_1772736858892_83ac443b.md\\\",\\\"size\\\":1012,\\\"mimetype\\\":\\\"text/markdown\\\"}],\\\"count\\\":1}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772736858894_gpmmtzt5p",
+      "created_at": "2026-03-05T18:54:18.894Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "upload",
+      "resource": "files",
+      "details": "{\"filename\":\"pay_1772736879282_f9eace69.html\",\"size\":1328,\"path\":\"/tmp/pay_1772736879282_f9eace69.html\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772736879283_a8tgow6sq",
+      "created_at": "2026-03-05T18:54:39.283Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/upload",
+      "details": "{\"body\":{\"path\":\"/Users/www1/test/234/yty\"},\"query\":{\"path\":\"/Users/www1/test/234/yty\"},\"params\":{},\"response\":\"{\\\"success\\\":true,\\\"files\\\":[{\\\"originalName\\\":\\\"pay.html\\\",\\\"filename\\\":\\\"pay_1772736879282_f9eace69.html\\\",\\\"path\\\":\\\"/tmp/pay_1772736879282_f9eace69.html\\\",\\\"size\\\":1328,\\\"mimetype\\\":\\\"text/html\\\"}],\\\"count\\\":1}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772736879285_kmdqfusy7",
+      "created_at": "2026-03-05T18:54:39.285Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/copy",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test/234\",\"targetPath\":\"/Users/www1/test/234/234\"},\"query\":{},\"params\":{}}",
+      "ip": "::1",
+      "status": "failed",
+      "id": "log_1772737083667_w9bofey30",
+      "created_at": "2026-03-05T18:58:03.667Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/copy",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test/234/eer\",\"targetPath\":\"/Users/www1/test/234/yty/eer\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772737106944_4sqympkrp",
+      "created_at": "2026-03-05T18:58:26.944Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/copy",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test/234/erwr\",\"targetPath\":\"/Users/www1/test/234/yty/erwr\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772737106950_mg4fa9tx8",
+      "created_at": "2026-03-05T18:58:26.950Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/copy",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test/234/qq9\",\"targetPath\":\"/Users/www1/test/234/yty/qq9\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772737106958_q0m5a3swt",
+      "created_at": "2026-03-05T18:58:26.958Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/copy",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test/234/test\",\"targetPath\":\"/Users/www1/test/234/yty/test\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772737106963_out1hchah",
+      "created_at": "2026-03-05T18:58:26.963Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/copy",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test/234/eer\",\"targetPath\":\"/Users/www1/test/234/yty/eer/eer\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772737183656_8eatvx7p3",
+      "created_at": "2026-03-05T18:59:43.656Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/copy",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test/234/erwr\",\"targetPath\":\"/Users/www1/test/234/yty/eer/erwr\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772737183671_hnon8dff8",
+      "created_at": "2026-03-05T18:59:43.671Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/copy",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test/234/qq9\",\"targetPath\":\"/Users/www1/test/234/yty/eer/qq9\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772737183676_ie8a5jzlq",
+      "created_at": "2026-03-05T18:59:43.676Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/copy",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test/234/test\",\"targetPath\":\"/Users/www1/test/234/yty/eer/test\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772737183682_iatgieu8j",
+      "created_at": "2026-03-05T18:59:43.682Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/copy",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test/234/yty/eer/erwr\",\"targetPath\":\"/Users/www1/test/234/yty/eer/eer/erwr\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772737196278_0rif7j6ex",
+      "created_at": "2026-03-05T18:59:56.278Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/copy",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test/234/yty/eer/qq9\",\"targetPath\":\"/Users/www1/test/234/yty/eer/eer/qq9\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772737196282_iqz3rx6yo",
+      "created_at": "2026-03-05T18:59:56.282Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/create",
+      "details": "{\"body\":{\"path\":\"/\",\"type\":\"directory\",\"name\":\"111\"},\"query\":{},\"params\":{}}",
+      "ip": "::1",
+      "status": "failed",
+      "id": "log_1772738500306_zirbie27f",
+      "created_at": "2026-03-05T19:21:40.306Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/create",
+      "details": "{\"body\":{\"path\":\"/Users/www1/test\",\"type\":\"directory\",\"name\":\"111\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true,\\\"path\\\":\\\"/Users/www1/test/111\\\"}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772738520087_liblc2k6u",
+      "created_at": "2026-03-05T19:22:00.087Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/copy",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test/234\",\"targetPath\":\"/Users/www1/test/111/234\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772738531842_vjzobx19a",
+      "created_at": "2026-03-05T19:22:11.842Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/copy",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test/qq9\",\"targetPath\":\"/Users/www1/test/111/qq9\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772738531845_b1delorgw",
+      "created_at": "2026-03-05T19:22:11.845Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/compress",
+      "details": "{\"body\":{\"paths\":[\"/Users/www1/test/111/234\",\"/Users/www1/test/111/qq9\"],\"targetPath\":\"/Users/www1/test/111/archive.zip\",\"format\":\"zip\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true,\\\"size\\\":214}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772738549851_3puaziz8h",
+      "created_at": "2026-03-05T19:22:29.851Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/create",
+      "details": "{\"body\":{\"path\":\"/Users/www1/test/111\",\"type\":\"directory\",\"name\":\"222\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true,\\\"path\\\":\\\"/Users/www1/test/111/222\\\"}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772738562838_4f1sou2mg",
+      "created_at": "2026-03-05T19:22:42.838Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/copy",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test/111/234\",\"targetPath\":\"/Users/www1/test/111/222/234\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772738578151_gy2nt246s",
+      "created_at": "2026-03-05T19:22:58.151Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/copy",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test/111/qq9\",\"targetPath\":\"/Users/www1/test/111/222/qq9\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772738578156_v2ubh4x44",
+      "created_at": "2026-03-05T19:22:58.156Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/copy",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test/111/archive.zip\",\"targetPath\":\"/Users/www1/test/111/222/archive.zip\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772738590906_k0nx5a9gb",
+      "created_at": "2026-03-05T19:23:10.906Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/extract",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test/111/222/archive.zip\",\"targetPath\":\"/Users/www1/test/111/222\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772738597855_fgtuyrroy",
+      "created_at": "2026-03-05T19:23:17.855Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/create",
+      "details": "{\"body\":{\"path\":\"/Users/www1/test/111/222\",\"type\":\"directory\",\"name\":\"333\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true,\\\"path\\\":\\\"/Users/www1/test/111/222/333\\\"}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772738620710_a7084pvz4",
+      "created_at": "2026-03-05T19:23:40.710Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/move",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test/111/222/archive.zip\",\"targetPath\":\"/Users/www1/test/111/222/333/archive.zip\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772738633890_7rubocdov",
+      "created_at": "2026-03-05T19:23:53.890Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/extract",
+      "details": "{\"body\":{\"sourcePath\":\"/Users/www1/test/111/222/333/archive.zip\",\"targetPath\":\"/Users/www1/test/111/222/333\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772738641547_j7dh2m0f5",
+      "created_at": "2026-03-05T19:24:01.547Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/save",
+      "details": "{\"body\":{\"path\":\"/Users/www1/test/111/222/333/qq9\",\"content\":\"fdfdfdsf111111\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772738755044_6gamqy8dc",
+      "created_at": "2026-03-05T19:25:55.044Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/save",
+      "details": "{\"body\":{\"path\":\"/Users/www1/test/111/222/333/qq9\",\"content\":\"fdfdfdsf1111112222\"},\"query\":{},\"params\":{},\"response\":\"{\\\"success\\\":true}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772739796087_mqg7dct0g",
+      "created_at": "2026-03-05T19:43:16.087Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "POST",
+      "resource": "/create",
+      "details": "{\"body\":{\"name\":\"test\",\"type\":\"mysql\",\"host\":\"localhost\",\"port\":3306,\"username\":\"root\",\"password\":\"***REDACTED***\"},\"query\":{},\"params\":{},\"response\":\"{\\\"name\\\":\\\"test\\\",\\\"type\\\":\\\"mysql\\\",\\\"host\\\":\\\"localhost\\\",\\\"port\\\":3306,\\\"username\\\":\\\"root\\\",\\\"password\\\":\\\"root\\\",\\\"id\\\":\\\"dbc_1772739909566\\\",\\\"created_at\\\":\\\"2026-03-05T19:45:09.566Z\\\"}\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772739909567_y90hgofes",
+      "created_at": "2026-03-05T19:45:09.567Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772741823172_a4o99h8eh",
+      "created_at": "2026-03-05T20:17:03.172Z"
+    },
+    {
+      "user_id": "user_admin",
+      "username": "admin",
+      "action": "login",
+      "resource": "/api/auth/login",
+      "details": "{\"role\":\"admin\"}",
+      "ip": "::1",
+      "status": "success",
+      "id": "log_1772742283467_s3cbpr0ka",
+      "created_at": "2026-03-05T20:24:43.467Z"
+    }
+  ],
+  "scheduled_tasks": [
+    {
+      "name": "系统备份测试",
+      "type": "shell",
+      "cron_expression": "0 0 * * *",
+      "enabled": false,
+      "command": "echo \"Backup completed\" && date",
+      "method": "GET",
+      "retry_times": 0,
+      "timeout": 300000,
+      "timezone": "Asia/Shanghai",
+      "id": "task_1772727593157",
+      "created_at": "2026-03-05T16:19:53.157Z",
+      "updated_at": "2026-03-05T16:19:53.157Z"
+    },
+    {
+      "name": "测试任务",
+      "type": "shell",
+      "cron_expression": "*/5 * * * *",
+      "enabled": true,
+      "command": "echo Hello Mac Panel",
+      "method": "GET",
+      "retry_times": 0,
+      "timeout": "300",
+      "timezone": "Asia/Shanghai",
+      "id": "task_1772728532839",
+      "created_at": "2026-03-05T16:35:32.839Z",
+      "updated_at": "2026-03-05T18:29:01.378Z"
+    }
+  ],
+  "task_executions": [
+    {
+      "id": "exec_1772735400459_rhmg0ehya",
+      "task_id": "task_1772728532839",
+      "task_name": "测试任务",
+      "status": "running",
+      "start_time": "2026-03-05T18:30:00.457Z"
+    },
+    {
+      "id": "exec_1772735700840_cka601f2f",
+      "task_id": "task_1772728532839",
+      "task_name": "测试任务",
+      "status": "running",
+      "start_time": "2026-03-05T18:35:00.839Z"
+    },
+    {
+      "id": "exec_1772736000211_joqmtg6nr",
+      "task_id": "task_1772728532839",
+      "task_name": "测试任务",
+      "status": "running",
+      "start_time": "2026-03-05T18:40:00.210Z"
+    },
+    {
+      "id": "exec_1772736300570_5jzbxjmqt",
+      "task_id": "task_1772728532839",
+      "task_name": "测试任务",
+      "status": "running",
+      "start_time": "2026-03-05T18:45:00.569Z"
+    },
+    {
+      "id": "exec_1772736600945_8u0231k8b",
+      "task_id": "task_1772728532839",
+      "task_name": "测试任务",
+      "status": "running",
+      "start_time": "2026-03-05T18:50:00.777Z"
+    },
+    {
+      "id": "exec_1772736900909_5fqbwxynu",
+      "task_id": "task_1772728532839",
+      "task_name": "测试任务",
+      "status": "running",
+      "start_time": "2026-03-05T18:55:00.735Z"
+    },
+    {
+      "id": "exec_1772737200284_0u2kyd9gi",
+      "task_id": "task_1772728532839",
+      "task_name": "测试任务",
+      "status": "running",
+      "start_time": "2026-03-05T19:00:00.098Z"
+    },
+    {
+      "id": "exec_1772737500601_8rgozw2ts",
+      "task_id": "task_1772728532839",
+      "task_name": "测试任务",
+      "status": "running",
+      "start_time": "2026-03-05T19:05:00.422Z"
+    },
+    {
+      "id": "exec_1772737800967_1o829kj44",
+      "task_id": "task_1772728532839",
+      "task_name": "测试任务",
+      "status": "running",
+      "start_time": "2026-03-05T19:10:00.782Z"
+    },
+    {
+      "id": "exec_1772738100314_pxy2ovbdg",
+      "task_id": "task_1772728532839",
+      "task_name": "测试任务",
+      "status": "running",
+      "start_time": "2026-03-05T19:15:00.125Z"
+    },
+    {
+      "id": "exec_1772738400639_qlsy1w313",
+      "task_id": "task_1772728532839",
+      "task_name": "测试任务",
+      "status": "running",
+      "start_time": "2026-03-05T19:20:00.465Z"
+    },
+    {
+      "id": "exec_1772738700954_cr5wlxtno",
+      "task_id": "task_1772728532839",
+      "task_name": "测试任务",
+      "status": "running",
+      "start_time": "2026-03-05T19:25:00.782Z"
+    },
+    {
+      "id": "exec_1772739000307_frra3cqcj",
+      "task_id": "task_1772728532839",
+      "task_name": "测试任务",
+      "status": "running",
+      "start_time": "2026-03-05T19:30:00.138Z"
+    },
+    {
+      "id": "exec_1772739300666_zr9vkj1jn",
+      "task_id": "task_1772728532839",
+      "task_name": "测试任务",
+      "status": "running",
+      "start_time": "2026-03-05T19:35:00.491Z"
+    },
+    {
+      "id": "exec_1772739600329_jl1y2fmmp",
+      "task_id": "task_1772728532839",
+      "task_name": "测试任务",
+      "status": "running",
+      "start_time": "2026-03-05T19:40:00.141Z"
+    },
+    {
+      "id": "exec_1772739900541_djmtbqp0w",
+      "task_id": "task_1772728532839",
+      "task_name": "测试任务",
+      "status": "running",
+      "start_time": "2026-03-05T19:45:00.354Z"
+    },
+    {
+      "id": "exec_1772740200917_0jwbewo85",
+      "task_id": "task_1772728532839",
+      "task_name": "测试任务",
+      "status": "running",
+      "start_time": "2026-03-05T19:50:00.737Z"
+    },
+    {
+      "id": "exec_1772740500599_xkdhvj8kz",
+      "task_id": "task_1772728532839",
+      "task_name": "测试任务",
+      "status": "running",
+      "start_time": "2026-03-05T19:55:00.421Z"
+    },
+    {
+      "id": "exec_1772740801009_uc2haen4q",
+      "task_id": "task_1772728532839",
+      "task_name": "测试任务",
+      "status": "running",
+      "start_time": "2026-03-05T20:00:00.822Z"
+    },
+    {
+      "id": "exec_1772741101119_jng8ix31j",
+      "task_id": "task_1772728532839",
+      "task_name": "测试任务",
+      "status": "running",
+      "start_time": "2026-03-05T20:05:00.944Z"
+    },
+    {
+      "id": "exec_1772741700867_10q5y7ujy",
+      "task_id": "task_1772728532839",
+      "task_name": "测试任务",
+      "status": "running",
+      "start_time": "2026-03-05T20:15:00.698Z"
+    },
+    {
+      "id": "exec_1772742000336_1ieakcdf3",
+      "task_id": "task_1772728532839",
+      "task_name": "测试任务",
+      "status": "running",
+      "start_time": "2026-03-05T20:20:00.170Z"
+    },
+    {
+      "id": "exec_1772742300881_zfyfxbu18",
+      "task_id": "task_1772728532839",
+      "task_name": "测试任务",
+      "status": "running",
+      "start_time": "2026-03-05T20:25:00.708Z"
+    },
+    {
+      "id": "exec_1772742600943_obli6yanf",
+      "task_id": "task_1772728532839",
+      "task_name": "测试任务",
+      "status": "running",
+      "start_time": "2026-03-05T20:30:00.773Z"
+    }
+  ],
+  "notifications": [],
+  "websites": [
+    {
+      "domain": "ai99.us",
+      "root_dir": "/www/wwwroot/ai99.us",
+      "php_version": "none",
+      "port": 80,
+      "ssl": false,
+      "id": "web_1772732365559",
+      "created_at": "2026-03-05T17:39:25.559Z",
+      "updated_at": "2026-03-05T17:39:34.003Z",
+      "rootDir": "/www/wwwroot/ai99.us",
+      "phpVersion": "none"
+    }
+  ],
+  "databases": [
+    {
+      "name": "test",
+      "type": "mysql",
+      "host": "localhost",
+      "port": 3306,
+      "username": "root",
+      "password": "root",
+      "id": "dbc_1772739909566",
+      "created_at": "2026-03-05T19:45:09.566Z"
+    }
+  ],
+  "settings": {
+    "initialized": true
+  }
+}

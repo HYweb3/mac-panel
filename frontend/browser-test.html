@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>浏览器连接测试</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+        #log {
+            background: #000;
+            padding: 10px;
+            border: 1px solid #444;
+            height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+            font-size: 12px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            background: #1890ff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        button:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+        #status {
+            margin: 20px 0;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .connected { background: #28a745; }
+        .disconnected { background: #dc3545; }
+        #targets {
+            margin: 20px 0;
+        }
+        .target-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: #2a2a2a;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .target-item:hover {
+            background: #3a3a3a;
+        }
+        .target-item.selected {
+            background: #1890ff;
+        }
+        #screenshot {
+            margin-top: 20px;
+            max-width: 100%;
+            border: 1px solid #444;
+        }
+    </style>
+</head>
+<body>
+    <h1>浏览器连接测试</h1>
+    <div id="status" class="disconnected">状态: 未连接</div>
+
+    <button onclick="loadTargets()" id="loadBtn">加载浏览器标签</button>
+    <button onclick="disconnect()" id="disconnectBtn" disabled>断开连接</button>
+
+    <div id="targets"></div>
+
+    <div id="screenshot-container" style="display:none;">
+        <h3>浏览器画面:</h3>
+        <img id="screenshot" alt="浏览器截图">
+    </div>
+
+    <div id="log"></div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        let ws = null;
+        let currentTarget = null;
+
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const time = new Date().toISOString();
+            logDiv.innerHTML += `[${time}] ${message}<br>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function updateStatus(connected) {
+            const statusDiv = document.getElementById('status');
+            if (connected) {
+                statusDiv.className = 'status connected';
+                statusDiv.textContent = '状态: 已连接';
+            } else {
+                statusDiv.className = 'status disconnected';
+                statusDiv.textContent = '状态: 未连接';
+            }
+        }
+
+        async function loadTargets() {
+            log('→ Loading browser targets...');
+            const loadBtn = document.getElementById('loadBtn');
+            loadBtn.disabled = true;
+
+            try {
+                const response = await fetch('http://localhost:3001/api/browser/targets', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const targets = await response.json();
+                    log(`✓ Found ${targets.length} target(s)`);
+
+                    const targetsDiv = document.getElementById('targets');
+                    targetsDiv.innerHTML = '<h3>可用的浏览器标签:</h3>';
+
+                    if (targets.length === 0) {
+                        targetsDiv.innerHTML += '<p>没有找到浏览器标签</p>';
+                        targetsDiv.innerHTML += '<p>请确保Chrome正在运行并启用了远程调试:</p>';
+                        targetsDiv.innerHTML += '<code>/Applications/Google\\ Chrome.app/Contents/MacOS/Google\\ Chrome --remote-debugging-port=9222</code>';
+                        return;
+                    }
+
+                    targets.forEach((target, index) => {
+                        const div = document.createElement('div');
+                        div.className = 'target-item';
+                        div.innerHTML = `
+                            <strong>${index + 1}. ${target.title}</strong><br>
+                            <small style="color:#999">${target.url}</small><br>
+                            <small style="color:#666">ID: ${target.id}</small>
+                        `;
+                        div.onclick = () => connectToTarget(target.id, target.title, div);
+                        targetsDiv.appendChild(div);
+                    });
+
+                    log('✓ Targets loaded, click on a target to connect');
+                } else {
+                    log('✗ Failed to load targets');
+                }
+            } catch (e) {
+            log(`✗ Error: ${e.message}`);
+            } finally {
+                loadBtn.disabled = false;
+            }
+        }
+
+        function connectToTarget(targetId, targetTitle, element) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                log('✗ Already connected, disconnect first');
+                return;
+            }
+
+            // 更新UI选中状态
+            document.querySelectorAll('.target-item').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+
+            log(`→ Connecting to: ${targetTitle}`);
+            log(`   Target ID: ${targetId}`);
+
+            const wsUrl = `ws://localhost:3001/ws/browser?token=${token}&targetId=${targetId}`;
+            log(`   WebSocket URL: ${wsUrl.replace(token, '***')}`);
+
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                log('✓ WebSocket connected');
+                updateStatus(true);
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const msg = JSON.parse(event.data);
+                    log(`✓ Message: ${msg.type}`);
+
+                    if (msg.type === 'ready') {
+                        log(`  Session ID: ${msg.sessionId}`);
+                        log('  → Sending startScreenshot...');
+
+                        ws.send(JSON.stringify({
+                            type: 'startScreenshot',
+                            data: { fps: 2 }
+                        }));
+                        log('  ✓ startScreenshot sent');
+                    }
+
+                    if (msg.type === 'screenshot') {
+                        const dataLength = msg.data.length;
+                        log(`  ✓ Screenshot: ${dataLength} bytes`);
+                        log('  → Displaying screenshot...');
+
+                        const img = document.getElementById('screenshot');
+                        img.src = `data:image/png;base64,${msg.data}`;
+                        document.getElementById('screenshot-container').style.display = 'block';
+
+                        log('  ✓ Screenshot displayed');
+                    }
+
+                    if (msg.type === 'error') {
+                        log(`  ✗ Error: ${msg.message}`);
+                    }
+                } catch (e) {
+                    log(`  ✗ Parse error: ${e.message}`);
+                    log(`  Raw data: ${event.data.substring(0, 100)}`);
+                }
+            };
+
+            ws.onerror = (error) => {
+                log('✗ WebSocket error');
+                log(`  Error: ${JSON.stringify(error)}`);
+                updateStatus(false);
+            };
+
+            ws.onclose = (event) => {
+                log(`✗ WebSocket closed`);
+                log(`  Code: ${event.code}`);
+                log(`  Reason: ${event.reason || 'none'}`);
+                log(`  Was clean: ${event.wasClean}`);
+                updateStatus(false);
+                ws = null;
+
+                // 取消选中状态
+                element.classList.remove('selected');
+            };
+        }
+
+        function disconnect() {
+            if (ws) {
+                log('→ Disconnecting...');
+                ws.close();
+                ws = null;
+                currentTarget = null;
+                updateStatus(false);
+                document.getElementById('screenshot-container').style.display = 'none';
+                document.querySelectorAll('.target-item').forEach(el => el.classList.remove('selected'));
+            }
+        }
+
+        // 自动加载标签
+        window.onload = () => {
+            log('Page loaded');
+            if (token) {
+                log('✓ Token found');
+                loadTargets();
+            } else {
+                log('✗ No token! Please login first.');
+            }
+        };
+    </script>
+</body>
+</html>

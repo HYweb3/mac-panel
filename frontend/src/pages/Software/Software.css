@@ -1,0 +1,104 @@
+/* 软件管理页面样式 */
+
+.software-page {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* 移动端优化 */
+@media (max-width: 768px) {
+  /* 页面标题 */
+  .software-page .page-title {
+    font-size: 20px;
+    margin-bottom: 16px;
+  }
+
+  /* 分类标签 */
+  .software-page .ant-tabs {
+    margin-bottom: 16px;
+  }
+
+  .software-page .ant-tabs-nav {
+    margin-bottom: 12px;
+  }
+
+  /* 软件卡片网格 */
+  .software-page .ant-row {
+    margin: 0 -8px;
+  }
+
+  /* 统计卡片整行显示 */
+  .software-page .ant-col {
+    padding: 0 8px;
+    margin-bottom: 16px;
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 0 0 100% !important;
+  }
+
+  /* 软件卡片 */
+  .software-page .ant-card {
+    margin-bottom: 0;
+  }
+
+  .software-page .ant-card-body {
+    padding: 16px;
+  }
+
+  /* 按钮自动换行 */
+  .software-page .ant-btn {
+    white-space: normal !important;
+    height: auto !important;
+  }
+
+  /* 标签自动换行 */
+  .software-page .ant-tag {
+    white-space: normal !important;
+  }
+
+  /* 模态框优化 */
+  .software-page .ant-modal {
+    max-width: calc(100vw - 32px) !important;
+  }
+
+  /* 进度条响应式 */
+  .software-page .ant-progress-text {
+    font-size: 12px;
+  }
+
+  /* 步骤条简化 */
+  .software-page .ant-steps {
+    flex-direction: column;
+  }
+
+  .software-page .ant-steps-item {
+    flex: none;
+  }
+}
+
+@media (max-width: 480px) {
+  /* 软件卡片单列显示 */
+  .software-page .ant-col {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* 卡片内容紧凑 */
+  .software-page .ant-card-body {
+    padding: 12px;
+  }
+
+  /* 软件图标缩小 */
+  .software-page .anticon {
+    font-size: 32px;
+  }
+
+  /* 字体缩小 */
+  .software-page .ant-card-meta-title {
+    font-size: 14px;
+  }
+
+  .software-page .ant-card-meta-description {
+    font-size: 12px;
+  }
+}

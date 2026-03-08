@@ -1,0 +1,20 @@
+# 备份清单
+## 项目备份
+文件: mac-panel-backup-all-20260307_145802.tar.gz
+大小: 946M
+时间: 2026-03-07 14:58:02
+
+## 包含内容
+- ✅ 前端代码 (frontend/)
+- ✅ 后端代码 (backend/)
+- ✅ 配置文件 (CLAUDE.md, package.json)
+- ✅ AI_MEMORY 记忆
+
+## 排除内容
+- ❌ node_modules (依赖包)
+- ❌ .git (版本控制)
+- ❌ dist (构建产物)
+- ❌ .vite (缓存)
+
+## 记忆备份
+- ✅ AI_MEMORY-backup-20260307_145802/

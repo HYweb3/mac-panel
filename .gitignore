@@ -1,0 +1,97 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+
+# Build outputs
+frontend/dist/
+backend/dist/
+frontend/build/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+frontend/.env.local
+backend/.env.local
+
+# Logs
+*.log
+backend.log
+backend_*.log
+frontend-*.log
+*.log.*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Database
+backend/data/db.json
+backend/data/db-backup*.json
+backend/data/backups/
+
+# Runtime data
+backend/data/uploads/
+backend/data/temp/
+backend/data/cache/
+
+# PID files
+*.pid
+backend.pid
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# Backup files
+*.backup
+*-backup-*
+backup/
+backups/
+AI_MEMORY-backup*/
+
+# Temporary files
+*.tmp
+*.temp
+tmp/
+temp/
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Package manager lock files (optional, uncomment if needed)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# Build artifacts
+*.tsbuildinfo
+
+# SSH keys and sensitive files
+*.pem
+*.key
+*.crt
+id_rsa*
+id_ed25519*
+
+# Development files
+dev_test.md
+check-*.sh
+fix-*.sh
+backend.pid

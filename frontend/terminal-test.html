@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal WebSocket Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+        #log {
+            background: #000;
+            padding: 10px;
+            border: 1px solid #444;
+            height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .connected { background: #28a745; }
+        .disconnected { background: #dc3545; }
+    </style>
+</head>
+<body>
+    <h1>Terminal WebSocket Test (Raw HTML)</h1>
+    <div id="status" class="status disconnected">Status: Disconnected</div>
+    <button onclick="connect()">Connect</button>
+    <button onclick="disconnect()">Disconnect</button>
+    <button onclick="sendTest()">Send Test Command</button>
+    <div id="log"></div>
+
+    <script>
+        let ws = null;
+        const token = localStorage.getItem('token');
+
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const time = new Date().toISOString();
+            logDiv.innerHTML += `[${time}] ${message}<br>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function updateStatus(connected) {
+            const statusDiv = document.getElementById('status');
+            if (connected) {
+                statusDiv.className = 'status connected';
+                statusDiv.textContent = 'Status: Connected';
+            } else {
+                statusDiv.className = 'status disconnected';
+                statusDiv.textContent = 'Status: Disconnected';
+            }
+        }
+
+        function connect() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                log('Already connected');
+                return;
+            }
+
+            if (!token) {
+                log('ERROR: No token found in localStorage');
+                return;
+            }
+
+            const wsUrl = `ws://localhost:3002/ws/terminal?token=${token}`;
+            log(`Connecting to: ${wsUrl.replace(token, '***')}`);
+
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                log('✓ WebSocket onopen fired');
+                updateStatus(true);
+            };
+
+            ws.onmessage = (event) => {
+                log(`✓ WebSocket onmessage received, length: ${event.data.length}`);
+                try {
+                    const message = JSON.parse(event.data);
+                    log(`  Message type: ${message.type}`);
+                    if (message.type === 'data') {
+                        log(`  Data: ${message.data.substring(0, 50)}...`);
+                    }
+                } catch (e) {
+                    log(`  Raw data: ${event.data.substring(0, 50)}...`);
+                }
+            };
+
+            ws.onerror = (error) => {
+                log('✗ WebSocket onerror fired');
+                log(`  Error: ${JSON.stringify(error)}`);
+                updateStatus(false);
+            };
+
+            ws.onclose = (event) => {
+                log(`✗ WebSocket onclose fired`);
+                log(`  Code: ${event.code}`);
+                log(`  Reason: ${event.reason || 'none'}`);
+                log(`  Was clean: ${event.wasClean}`);
+                updateStatus(false);
+            };
+        }
+
+        function disconnect() {
+            if (ws) {
+                log('Closing WebSocket');
+                ws.close();
+                ws = null;
+            }
+        }
+
+        function sendTest() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                log('ERROR: WebSocket not connected');
+                return;
+            }
+
+            const message = {
+                type: 'input',
+                data: 'pwd\n'
+            };
+
+            log(`Sending: ${JSON.stringify(message)}`);
+            ws.send(JSON.stringify(message));
+        }
+
+        // Auto connect on page load
+        window.onload = () => {
+            log('Page loaded');
+            if (token) {
+                log('Token found, auto-connecting...');
+                setTimeout(connect, 500);
+            } else {
+                log('ERROR: No token! Please login first.');
+            }
+        };
+
+        // Cleanup on page unload
+        window.onbeforeunload = () => {
+            log('Page unloading, closing WebSocket');
+            if (ws) {
+                ws.close();
+            }
+        };
+    </script>
+</body>
+</html>

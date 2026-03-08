@@ -1,0 +1,80 @@
+/* 用户管理页面样式 */
+
+.users-page {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* 移动端优化 */
+@media (max-width: 768px) {
+  /* 页面标题 */
+  .users-page .page-title {
+    font-size: 20px;
+    margin-bottom: 16px;
+  }
+
+  /* 统计卡片整行显示 */
+  .users-page .ant-col {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 0 0 100% !important;
+    margin-bottom: 12px;
+  }
+
+  /* 表格横向滚动 */
+  .users-page .ant-table-wrapper {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .users-page .ant-table {
+    min-width: 100% !important;
+  }
+
+  /* 表格单元格不换行 */
+  .users-page .ant-table-tbody > tr > td,
+  .users-page .ant-table-thead > tr > th {
+    white-space: nowrap !important;
+  }
+
+  /* 按钮自动换行 */
+  .users-page .ant-btn {
+    white-space: normal !important;
+    height: auto !important;
+  }
+
+  /* 标签自动换行 */
+  .users-page .ant-tag {
+    white-space: normal !important;
+  }
+
+  /* 模态框优化 */
+  .users-page .ant-modal {
+    max-width: calc(100vw - 32px) !important;
+  }
+
+  .users-page .ant-modal-body {
+    padding: 16px !important;
+  }
+
+  /* 表单响应式 */
+  .users-page .ant-form-item {
+    margin-bottom: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .users-page .ant-table {
+    font-size: 12px;
+  }
+
+  .users-page .ant-table-thead > tr > th,
+  .users-page .ant-table-tbody > tr > td {
+    padding: 6px 8px;
+  }
+
+  /* 统计数字字体缩小 */
+  .users-page .ant-statistic-content {
+    font-size: 20px !important;
+  }
+}

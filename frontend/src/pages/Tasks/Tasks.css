@@ -1,0 +1,125 @@
+.tasks-page {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.page-title {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 24px;
+  color: #333;
+}
+
+/* 统计卡片响应式 */
+.tasks-page .ant-row {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 -8px;
+}
+
+.tasks-page .ant-col {
+  padding: 0 8px;
+  margin-bottom: 16px;
+}
+
+/* 移动端优化 */
+@media (max-width: 768px) {
+  .page-title {
+    font-size: 20px;
+    margin-bottom: 16px;
+  }
+
+  /* 统计卡片整行显示 */
+  .tasks-page .ant-col {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 0 0 100% !important;
+    margin-bottom: 12px;
+  }
+
+  /* 表格容器 - 必须设置 overflow */
+  .tasks-page .ant-table-wrapper,
+  .tasks-page .ant-table-container,
+  .tasks-page .ant-table-body {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* 确保表格有最小宽度 */
+  .tasks-page .ant-table {
+    min-width: max-content !important;
+    width: 100% !important;
+  }
+
+  /* 表格单元格不换行 */
+  .tasks-page .ant-table-tbody > tr > td,
+  .tasks-page .ant-table-thead > tr > th {
+    white-space: nowrap !important;
+  }
+
+  /* 按钮自动换行 */
+  .tasks-page .ant-btn {
+    white-space: normal !important;
+    height: auto !important;
+  }
+
+  /* 表单响应式 */
+  .tasks-page .ant-form-item {
+    margin-bottom: 12px;
+  }
+
+  .tasks-page .ant-form-item-label {
+    padding-bottom: 4px;
+  }
+
+  /* 卡片响应式 */
+  .tasks-page .ant-col {
+    margin-bottom: 12px;
+  }
+
+  /* 标签页响应式 */
+  .tasks-page .ant-tabs-nav {
+    margin-bottom: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-title {
+    font-size: 18px;
+  }
+
+  .tasks-page .ant-table {
+    font-size: 12px;
+  }
+
+  .tasks-page .ant-table-thead > tr > th,
+  .tasks-page .ant-table-tbody > tr > td {
+    padding: 6px 8px;
+  }
+}
+
+/* 全局表格滚动样式（非移动端也可以使用） */
+.tasks-page .ant-table-wrapper {
+  overflow-x: auto;
+}
+
+.tasks-page .ant-table-container {
+  overflow-x: auto;
+  width: 100%;
+}
+
+
+@media (max-width: 480px) {
+  .page-title {
+    font-size: 18px;
+  }
+
+  .tasks-page .ant-table {
+    font-size: 12px;
+  }
+
+  .tasks-page .ant-table-thead > tr > th,
+  .tasks-page .ant-table-tbody > tr > td {
+    padding: 6px 8px;
+  }
+}
