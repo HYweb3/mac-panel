@@ -222,6 +222,65 @@ install_nodejs() {
     log_success "npm 配置完成"
 }
 
+# 创建专用用户
+create_user() {
+    log_step "创建 Mac Panel 服务用户"
+
+    USERNAME="macpanel"
+
+    if id "$USERNAME" &>/dev/null; then
+        log_info "用户 $USERNAME 已存在"
+
+        # 检查用户是否在 admin 组
+        if groups "$USERNAME" | grep -q admin; then
+            log_success "用户已在 admin 组"
+        else
+            log_info "将用户添加到 admin 组..."
+            sudo dseditgroup -o edit -t "$USERNAME" admin
+            log_success "用户已添加到 admin 组"
+        fi
+    else
+        log_info "创建专用用户: $USERNAME"
+
+        # 生成随机密码
+        PASSWORD=$(openssl rand -base64 16)
+
+        # 创建用户
+        sudo sysadminctl -addUser "$USERNAME" \
+            -fullName "Mac Panel Service User" \
+            -password "$PASSWORD" \
+            -admin 2>/dev/null || {
+            log_warn "sysadminctl 创建用户失败，尝试使用 dscl..."
+
+            # 备用方法：使用 dscl
+            sudo dscl . create /Users/"$USERNAME"
+            sudo dscl . create /Users/"$USERNAME" RealName "Mac Panel Service User"
+            sudo dscl . create /Users/"$USERNAME" passwd "$PASSWORD"
+            sudo dscl . create /Users/"$USERNAME" PrimaryGroupID 80
+            sudo dscl . create /Users/"$USERNAME" UniqueID 500
+            sudo dscl . create /Users/"$USERNAME" UserShell /bin/bash
+            sudo dscl . create /Users/"$USERNAME" NFSHomeDirectory /Users/"$USERNAME"
+
+            # 创建家目录
+            sudo mkdir -p /Users/"$USERNAME"
+            sudo chown "$USERNAME":/Users/"$USERNAME"
+
+            # 添加到 admin 组
+            sudo dseditgroup -o edit -a "$USERNAME" admin
+        }
+
+        if [ $? -eq 0 ]; then
+            log_success "用户 $USERNAME 创建成功"
+            log_warn "密码: $PASSWORD (请妥善保管)"
+        else
+            log_error "用户创建失败"
+            exit 1
+        fi
+    fi
+
+    log_success "服务用户配置完成"
+}
+
 # 克隆或更新项目
 clone_or_update_project() {
     log_step "获取项目代码"
@@ -418,14 +477,100 @@ setup_permissions() {
     log_step "配置文件权限"
 
     cd "$PROJECT_DIR"
+    USERNAME="macpanel"
 
-    # 确保数据目录有写权限
+    # 设置项目目录所有者
+    if id "$USERNAME" &>/dev/null; then
+        log_info "设置项目目录所有者为 $USERNAME..."
+        sudo chown -R "$USERNAME":staff "$PROJECT_DIR"
+    else
+        log_warn "用户 $USERNAME 不存在，使用当前用户"
+    fi
+
+    # 设置权限
     chmod -R 755 .
+
+    # 数据目录需要写权限
     chmod 775 backend/data
     chmod 644 backend/data/*.json 2>/dev/null || true
 
+    # 日志目录
+    mkdir -p backend/logs
+    chmod 775 backend/logs
+
+    # 上传目录
+    mkdir -p backend/uploads
+    chmod 775 backend/uploads
+
+    # 确保脚本可执行
+    find . -name "*.sh" -type f -exec chmod +x {} \;
+
     log_success "权限配置完成"
 }
+
+# 配置sudo免密
+setup_sudoers() {
+    log_step "配置 Sudoers 免密"
+
+    SUDOERS_FILE="/etc/sudoers.d/mac-panel"
+    USERNAME="macpanel"
+
+    # 检查用户是否存在
+    if ! id "$USERNAME" &>/dev/null; then
+        log_warn "用户 $USERNAME 不存在，跳过 sudoers 配置"
+        return
+    fi
+
+    log_info "创建 sudoers 配置..."
+
+    # 创建sudoers配置文件
+    sudo tee "$SUDOERS_FILE" > /dev/null << EOF
+# Mac Panel Sudoers Configuration
+# 允许 macpanel 用户管理系统服务
+# 生成时间: $(date)
+
+# 服务管理
+$USERNAME ALL=(ALL) NOPASSWD: /bin/launchctl kickstart -k gui/$(id -u $USERNAME) com.github.macpanel.backend
+$USERNAME ALL=(ALL) NOPASSWD: /bin/launchctl kickstart -k gui/$(id -u $USERNAME) com.github.macpanel.frontend
+
+# Nginx 管理
+$USERNAME ALL=(ALL) NOPASSWD: /opt/homebrew/bin/nginx -s *
+$USERNAME ALL=(ALL) NOPASSWD: /opt/homebrew/sbin/nginx -s *
+$USERNAME ALL=(ALL) NOPASSWD: /usr/local/bin/nginx
+
+# 软件管理 (brew services)
+$USERNAME ALL=(ALL) NOPASSWD: /opt/homebrew/bin/brew services *
+$USERNAME ALL=(ALL) NOPASSWD: /usr/local/bin/brew services *
+
+# 网站管理
+$USERNAME ALL=(ALL) NOPASSWD: /bin/mkdir -p /Users/*/wwwroot
+$USERNAME ALL=(ALL) NOPASSWD: /bin/chown -R *:staff /Users/*/wwwroot
+
+# 系统监控
+$USERNAME ALL=(ALL) NOPASSWD: /usr/bin/ps
+$USERNAME ALL=(ALL) NOPASSWD: /usr/bin/kill *
+$USERNAME ALL=(ALL) NOPASSWD: /bin/df
+$USERNAME ALL=(ALL) NOPASSWD: /usr/bin/netstat
+$USERNAME ALL=(ALL) NOPASSWD: /sbin/ifconfig
+
+# 文件权限
+$USERNAME ALL=(ALL) NOPASSWD: /bin/chmod -R 755 /Users/*/wwwroot
+$USERNAME ALL=(ALL) NOPASSWD: /usr/sbin/chown *
+EOF
+
+    # 设置正确的权限
+    sudo chmod 440 "$SUDOERS_FILE"
+
+    # 验证sudoers文件语法
+    if sudo visudo -c -f "$SUDOERS_FILE" > /dev/null 2>&1; then
+        log_success "Sudoers 配置完成"
+    else
+        log_error "Sudoers 配置语法错误"
+        sudo rm -f "$SUDOERS_FILE"
+        exit 1
+    fi
+}
+
 
 # 停止现有服务
 stop_existing_services() {
@@ -637,11 +782,13 @@ main() {
     check_homebrew
     install_required_tools
     install_nodejs
+    create_user
     clone_or_update_project
     install_project_dependencies
     setup_environment
     init_database
     setup_permissions
+    setup_sudoers
     stop_existing_services
     start_services
     test_services
