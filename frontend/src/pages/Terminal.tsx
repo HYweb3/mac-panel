@@ -1,12 +1,18 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Card, Button, Space } from 'antd';
-import { PlusOutlined, CloseOutlined } from '@ant-design/icons';
+import { Card, Button, Space, message } from 'antd';
+import { PlusOutlined, CloseOutlined, ReloadOutlined } from '@ant-design/icons';
 import { Terminal } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 import { useTerminalStore } from '../store';
 import 'xterm/css/xterm.css';
 import './Terminal.css';
+
+// 重连配置
+const MAX_RECONNECT_ATTEMPTS = 10; // 最大重连次数
+const INITIAL_RECONNECT_DELAY = 1000; // 初始重连延迟（1秒）
+const MAX_RECONNECT_DELAY = 30000; // 最大重连延迟（30秒）
+const HEARTBEAT_INTERVAL = 30000; // 心跳间隔（30秒）
 
 export default function TerminalPage() {
   const [searchParams] = useSearchParams();
@@ -14,33 +20,248 @@ export default function TerminalPage() {
   const terminalInstanceRef = useRef<any>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const heartbeatTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const [isConnected, setIsConnected] = useState(false);
+  const [isReconnecting, setIsReconnecting] = useState(false);
+  const [reconnectAttempt, setReconnectAttempt] = useState(0);
+  const [reconnectDelay, setReconnectDelay] = useState(INITIAL_RECONNECT_DELAY);
+
   const { tabs, activeTab, addTab, removeTab, setActiveTab } = useTerminalStore();
 
-  useEffect(() => {
-    console.log('[Terminal] Component mounted');
-    initTerminal();
-
-    return () => {
-      console.log('[Terminal] Component unmounting, cleaning up...');
-      if (resizeTimeoutRef.current) {
-        clearTimeout(resizeTimeoutRef.current);
-      }
-      if (wsRef.current) {
-        console.log('[Terminal] Closing WebSocket on unmount');
-        wsRef.current.close();
-      }
-    };
+  // 清理所有定时器
+  const cleanupTimers = useCallback(() => {
+    if (resizeTimeoutRef.current) {
+      clearTimeout(resizeTimeoutRef.current);
+      resizeTimeoutRef.current = null;
+    }
+    if (heartbeatTimeoutRef.current) {
+      clearInterval(heartbeatTimeoutRef.current);
+      heartbeatTimeoutRef.current = null;
+    }
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
   }, []);
 
-  const initTerminal = () => {
+  // 启动心跳
+  const startHeartbeat = useCallback((ws: WebSocket) => {
+    console.log('[Terminal] Starting heartbeat...');
+    if (heartbeatTimeoutRef.current) {
+      clearInterval(heartbeatTimeoutRef.current);
+    }
+
+    heartbeatTimeoutRef.current = setInterval(() => {
+      if (ws.readyState === WebSocket.OPEN) {
+        console.log('[Terminal] Sending ping...');
+        ws.send(JSON.stringify({ type: 'ping' }));
+      }
+    }, HEARTBEAT_INTERVAL);
+  }, []);
+
+  // 停止心跳
+  const stopHeartbeat = useCallback(() => {
+    if (heartbeatTimeoutRef.current) {
+      clearInterval(heartbeatTimeoutRef.current);
+      heartbeatTimeoutRef.current = null;
+      console.log('[Terminal] Heartbeat stopped');
+    }
+  }, []);
+
+  // 计算重连延迟（指数退避）
+  const calculateReconnectDelay = useCallback((attempt: number) => {
+    return Math.min(
+      INITIAL_RECONNECT_DELAY * Math.pow(2, attempt),
+      MAX_RECONNECT_DELAY
+    );
+  }, []);
+
+  // 自动重连
+  const scheduleReconnect = useCallback((terminal: Terminal, attempt: number) => {
+    if (attempt >= MAX_RECONNECT_ATTEMPTS) {
+      console.error('[Terminal] Max reconnect attempts reached');
+      setIsReconnecting(false);
+      setReconnectAttempt(0);
+      terminal.write('\r\n✗ Max reconnect attempts reached. Please refresh.\r\n');
+      message.error('连接失败，请刷新页面重试');
+      return;
+    }
+
+    const delay = calculateReconnectDelay(attempt);
+    setReconnectDelay(delay);
+    setReconnectAttempt(attempt);
+    setIsReconnecting(true);
+
+    terminal.write(`\r\n⚠ Connection lost. Reconnecting in ${Math.ceil(delay / 1000)}s... (attempt ${attempt}/${MAX_RECONNECT_ATTEMPTS})\r\n`);
+
+    reconnectTimeoutRef.current = setTimeout(() => {
+      console.log(`[Terminal] Reconnect attempt ${attempt + 1}/${MAX_RECONNECT_ATTEMPTS}`);
+      connectWebSocket(terminal, attempt + 1);
+    }, delay);
+  }, [calculateReconnectDelay]);
+
+  // 连接 WebSocket
+  const connectWebSocket = useCallback((terminal: Terminal, attempt = 0) => {
+    console.log('[Terminal] Connecting to WebSocket...');
+    const token = localStorage.getItem('token');
+
+    const TERMINAL_WS_URL = import.meta.env.VITE_TERMINAL_WS_URL || 'ws://localhost:3002';
+    const wsUrl = `${TERMINAL_WS_URL}/ws/terminal?token=${token}`;
+
+    console.log('[Terminal] WebSocket URL:', wsUrl.replace(token, '***'));
+
+    const ws = new WebSocket(wsUrl);
+    wsRef.current = ws;
+
+    ws.onopen = () => {
+      console.log('[Terminal] WebSocket connected');
+      setIsConnected(true);
+      setIsReconnecting(false);
+      setReconnectAttempt(0);
+
+      // 清除重连定时器
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
+      }
+
+      // 启动心跳
+      startHeartbeat(ws);
+
+      terminal.clear();
+      terminal.write('\r\n✓ Connected to terminal\r\n');
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const message = JSON.parse(event.data);
+
+        switch (message.type) {
+          case 'data':
+            terminal.write(message.data);
+            break;
+
+          case 'ready':
+            console.log('[Terminal] Terminal ready:', message);
+            terminal.clear();
+            terminal.write(`\r\n✓ Terminal ready\r\n`);
+            terminal.write(`Session: ${message.sessionId}\r\n`);
+            terminal.write(`Shell: ${message.shell}\r\n`);
+            terminal.write(`Directory: ${message.cwd}\r\n\r\n`);
+
+            // Check if workdir parameter is provided
+            const workDir = searchParams.get('workdir');
+            if (workDir && ws.readyState === WebSocket.OPEN) {
+              console.log('[Terminal] Changing to work directory:', workDir);
+              terminal.write(`→ Changing to: ${workDir}\r\n`);
+              ws.send(JSON.stringify({ type: 'input', data: `cd "${workDir}"\r` }));
+            }
+            break;
+
+          case 'exit':
+            console.log('[Terminal] Terminal exited:', message);
+            terminal.write(`\r\n✓ Terminal exited (code: ${message.exitCode})\r\n`);
+            setIsConnected(false);
+            break;
+
+          case 'error':
+            console.error('[Terminal] Error:', message);
+            terminal.write(`\r\n✗ Error: ${message.message}\r\n`);
+            setIsConnected(false);
+            break;
+
+          case 'pong':
+            // 心跳响应
+            console.log('[Terminal] Pong received');
+            break;
+
+          default:
+            if (message.data) {
+              terminal.write(message.data);
+            }
+        }
+      } catch (error) {
+        console.error('[Terminal] Error parsing message:', error);
+        terminal.write(event.data);
+      }
+    };
+
+    ws.onerror = (error) => {
+      console.error('[Terminal] WebSocket error:', error);
+      if (attempt === 0) {
+        terminal.write('\r\n✗ Connection error\r\n');
+      }
+      setIsConnected(false);
+    };
+
+    ws.onclose = (event) => {
+      console.log('[Terminal] WebSocket closed:', { code: event.code, reason: event.reason });
+      setIsConnected(false);
+      stopHeartbeat();
+
+      // 如果不是主动关闭，尝试重连
+      if (event.code !== 1000) {
+        console.log('[Terminal] Connection lost, scheduling reconnect...');
+        scheduleReconnect(terminal, attempt);
+      }
+    };
+
+    terminal.onData((data: string) => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'input', data }));
+      }
+    });
+
+    // 监听终端尺寸变化
+    const handleResize = () => {
+      if (terminalInstanceRef.current && ws.readyState === WebSocket.OPEN) {
+        terminalInstanceRef.current.fitAddon.fit();
+        const dims = { cols: terminal.cols, rows: terminal.rows };
+        ws.send(JSON.stringify({ type: 'resize', data: dims }));
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    // 初始尺寸
+    if (resizeTimeoutRef.current) {
+      clearTimeout(resizeTimeoutRef.current);
+    }
+    resizeTimeoutRef.current = setTimeout(() => {
+      handleResize();
+    }, 500);
+  }, [searchParams, startHeartbeat, stopHeartbeat, scheduleReconnect]);
+
+  // 手动重连
+  const handleManualReconnect = useCallback(() => {
+    if (!terminalInstanceRef.current) return;
+
+    const { terminal } = terminalInstanceRef.current;
+    console.log('[Terminal] Manual reconnect triggered');
+
+    // 关闭现有连接
+    if (wsRef.current) {
+      wsRef.current.close(1000, 'Manual reconnect');
+    }
+
+    // 重置状态
+    setIsReconnecting(true);
+    setReconnectAttempt(0);
+    terminal.write('\r\n⚠ Reconnecting...\r\n');
+
+    // 立即重连
+    connectWebSocket(terminal, 0);
+  }, [connectWebSocket]);
+
+  const initTerminal = useCallback(() => {
     console.log('[Terminal] Initializing terminal...');
     if (!terminalRef.current) {
       console.error('[Terminal] terminalRef.current is null!');
       return;
     }
 
-    // Create terminal
     const terminal = new Terminal({
       cursorBlink: true,
       fontSize: 14,
@@ -61,147 +282,22 @@ export default function TerminalPage() {
     terminalInstanceRef.current = { terminal, fitAddon };
     console.log('[Terminal] Terminal instance created');
 
-    // Connect to WebSocket
-    connectWebSocket(terminal);
-  };
+    connectWebSocket(terminal, 0);
+  }, [connectWebSocket]);
 
-  const connectWebSocket = (terminal: Terminal) => {
-    console.log('[Terminal] Connecting to WebSocket...');
-    const token = localStorage.getItem('token');
+  useEffect(() => {
+    console.log('[Terminal] Component mounted');
+    initTerminal();
 
-    // 调试：检查环境变量
-    console.log('[Terminal] Environment check:');
-    console.log('[Terminal] VITE_TERMINAL_WS_URL:', import.meta.env.VITE_TERMINAL_WS_URL);
-    console.log('[Terminal] All env vars:', {
-      VITE_API_URL: import.meta.env.VITE_API_URL,
-      VITE_WS_URL: import.meta.env.VITE_WS_URL,
-      VITE_TERMINAL_WS_URL: import.meta.env.VITE_TERMINAL_WS_URL,
-      VITE_BROWSER_WS_URL: import.meta.env.VITE_BROWSER_WS_URL
-    });
-
-    // 使用专门的终端WebSocket URL
-    const TERMINAL_WS_URL = import.meta.env.VITE_TERMINAL_WS_URL;
-    const wsUrl = `${TERMINAL_WS_URL}/ws/terminal?token=${token}`;
-
-    console.log('[Terminal] Final WebSocket URL:', wsUrl.replace(token, '***'));
-    console.log('[Terminal] Expected: ws://192.168.0.7:3002/ws/terminal');
-
-    const ws = new WebSocket(wsUrl);
-    wsRef.current = ws;
-
-    ws.onopen = () => {
-      console.log('[Terminal] WebSocket onopen fired');
-      setIsConnected(true);
-      terminal.clear();
-      terminal.write('\r\n✓ Connecting to terminal...\r\n');
-    };
-
-    ws.onmessage = (event) => {
-      console.log('[Terminal] WebSocket onmessage, length:', event.data.length);
-      try {
-        const message = JSON.parse(event.data);
-        console.log('[Terminal Frontend] Received message:', message.type);
-
-        switch (message.type) {
-          case 'data':
-            // 写入终端数据
-            terminal.write(message.data);
-            break;
-
-          case 'ready':
-            // 终端就绪
-            console.log('[Terminal Frontend] Terminal ready:', message);
-            terminal.clear();
-            terminal.write(`\r\n✓ Terminal ready\r\n`);
-            terminal.write(`Session: ${message.sessionId}\r\n`);
-            terminal.write(`Shell: ${message.shell}\r\n`);
-            terminal.write(`Directory: ${message.cwd}\r\n`);
-            terminal.write(`\r\n`);
-
-            // Check if workdir parameter is provided
-            const workDir = searchParams.get('workdir');
-            if (workDir && ws.readyState === WebSocket.OPEN) {
-              console.log('[Terminal] Changing to work directory:', workDir);
-              terminal.write(`\r\n→ Changing to: ${workDir}\r\n`);
-              // Send cd command
-              ws.send(JSON.stringify({ type: 'input', data: `cd "${workDir}"\r` }));
-            }
-
-            break;
-
-          case 'exit':
-            // 终端退出
-            console.log('[Terminal Frontend] Terminal exited:', message);
-            terminal.write(`\r\n✓ Terminal exited (code: ${message.exitCode})\r\n`);
-            setIsConnected(false);
-            break;
-
-          case 'error':
-            // 错误消息
-            console.log('[Terminal Frontend] Error:', message);
-            terminal.write(`\r\n✗ Error: ${message.message}\r\n`);
-            setIsConnected(false);
-            break;
-
-          case 'pong':
-            // 心跳响应，忽略
-            break;
-
-          default:
-            console.log('[Terminal Frontend] Unknown message type:', message.type);
-            // 其他消息，尝试写入 data 字段
-            if (message.data) {
-              terminal.write(message.data);
-            }
-        }
-      } catch (error) {
-        console.error('[Terminal Frontend] Error parsing message:', error);
-        // 如果不是 JSON 格式，直接写入
-        terminal.write(event.data);
+    return () => {
+      console.log('[Terminal] Component unmounting, cleaning up...');
+      cleanupTimers();
+      stopHeartbeat();
+      if (wsRef.current) {
+        wsRef.current.close(1000, 'Component unmount');
       }
     };
-
-    ws.onerror = (error) => {
-      console.error('[Terminal] WebSocket onerror:', error);
-      terminal.write('\r\n✗ Connection error\r\n');
-      setIsConnected(false);
-    };
-
-    ws.onclose = (event) => {
-      console.log('[Terminal] WebSocket onclose:', { code: event.code, reason: event.reason, wasClean: event.wasClean });
-      terminal.write(`\r\n✗ Connection closed (code: ${event.code})\r\n`);
-      setIsConnected(false);
-    };
-
-    terminal.onData((data: string) => {
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ type: 'input', data }));
-      }
-    });
-
-    // 监听终端尺寸变化
-    const handleResize = () => {
-      if (terminalInstanceRef.current && ws.readyState === WebSocket.OPEN) {
-        terminalInstanceRef.current.fitAddon.fit();
-        const dims = { cols: terminal.cols, rows: terminal.rows };
-        console.log('[Terminal] Resizing to:', dims);
-        ws.send(JSON.stringify({
-          type: 'resize',
-          data: dims
-        }));
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-
-    // 初始尺寸（延迟执行，确保终端已完全初始化）
-    if (resizeTimeoutRef.current) {
-      clearTimeout(resizeTimeoutRef.current);
-    }
-    resizeTimeoutRef.current = setTimeout(() => {
-      handleResize();
-    }, 500);
-  };
+  }, [initTerminal, cleanupTimers, stopHeartbeat]);
 
   const handleNewTab = () => {
     const newTab = {
@@ -214,9 +310,15 @@ export default function TerminalPage() {
 
   const handleCloseTab = (tabId: string) => {
     if (tabs.length === 1) {
-      return; // Don't close the last tab
+      return;
     }
     removeTab(tabId);
+  };
+
+  // 格式化重连延迟
+  const formatDelay = (ms: number) => {
+    if (ms < 1000) return `${ms}ms`;
+    return `${(ms / 1000).toFixed(1)}s`;
   };
 
   return (
@@ -254,8 +356,20 @@ export default function TerminalPage() {
         <Space>
           <div className="connection-status">
             <span className={`status-indicator ${isConnected ? 'connected' : ''}`} />
-            {isConnected ? '已连接' : '未连接'}
+            {isConnected ? '已连接' : isReconnecting ? `重连中... (${reconnectAttempt}/${MAX_RECONNECT_ATTEMPTS})` : '未连接'}
           </div>
+
+          {!isConnected && (
+            <Button
+              type="text"
+              size="small"
+              icon={<ReloadOutlined />}
+              onClick={handleManualReconnect}
+              loading={isReconnecting}
+            >
+              重连
+            </Button>
+          )}
         </Space>
       </div>
 
