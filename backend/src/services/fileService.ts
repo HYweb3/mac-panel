@@ -335,11 +335,26 @@ export const compressFiles = async (paths: string[], targetPath: string, format:
       reject(err);
     });
 
+    archive.on('warning', (err) => {
+      if (err.code !== 'ENOENT') {
+        console.warn('Archive warning:', err);
+      }
+    });
+
     archive.pipe(output);
 
+    // Add files/directories to archive
     paths.forEach((filePath) => {
       const validPath = validatePath(filePath);
-      archive.file(validPath, { name: path.basename(filePath) });
+      const stats = fs.statSync(validPath);
+
+      if (stats.isDirectory()) {
+        // For directories, add the entire directory with its contents
+        archive.directory(validPath, path.basename(filePath));
+      } else {
+        // For files, add with the filename (not full path to avoid nested structure)
+        archive.file(validPath, { name: path.basename(filePath) });
+      }
     });
 
     archive.finalize();
@@ -353,14 +368,32 @@ export const extractArchive = async (sourcePath: string, targetPath: string) => 
 
   await fs.ensureDir(validTarget);
 
-  if (sourcePath.endsWith('.zip')) {
+  if (validSource.endsWith('.zip')) {
     await extractZip(validSource, { dir: path.resolve(validTarget) });
+  } else if (validSource.endsWith('.tar.gz') || validSource.endsWith('.tgz')) {
+    // Extract tar.gz using system tar command
+    await execAsync(`tar -xzf "${validSource}" -C "${validTarget}"`);
+  } else if (validSource.endsWith('.tar')) {
+    // Extract tar using system tar command
+    await execAsync(`tar -xf "${validSource}" -C "${validTarget}"`);
   } else {
-    // For tar, tar.gz, use system tar command or implement with node library
-    throw new Error('Extraction for this format not yet implemented');
+    throw new Error('Unsupported archive format. Supported formats: .zip, .tar, .tar.gz');
   }
 
   return { success: true };
+};
+
+// Helper: Execute shell command
+const execAsync = (command: string): Promise<{ stdout: string; stderr: string }> => {
+  return new Promise((resolve, reject) => {
+    require('child_process').exec(command, (error: any, stdout: string, stderr: string) => {
+      if (error) {
+        reject(new Error(`Command failed: ${error.message}\n${stderr}`));
+      } else {
+        resolve({ stdout, stderr });
+      }
+    });
+  });
 };
 
 // Get file content
