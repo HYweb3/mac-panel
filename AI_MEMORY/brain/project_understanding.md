@@ -718,3 +718,31 @@ curl -fsSL https://raw.githubusercontent.com/HYweb3/mac-panel/master/web-install
 - 🌐 **网络分发**: 直接从 GitHub 下载最新版本
 - 🔄 **易更新**: 使用 git pull 或 mac-panel update
 - 📚 **完整文档**: 多种安装方法和详细指南
+
+## 最新更新（2026-03-10 13:10）
+
+### 文件管理压缩解压功能修复 ✅
+**问题**:
+- 压缩功能无法正确处理目录及其内容
+- 解压功能只支持 ZIP 格式
+
+**修复**:
+- ✅ 使用 `archive.directory()` 递归压缩目录
+- ✅ 保留完整目录结构
+- ✅ 支持解压 .tar 和 .tar.gz 格式
+- ✅ 添加系统 tar 命令支持
+
+**支持的格式**:
+- 压缩：ZIP, TAR, TAR.GZ
+- 解压：ZIP, TAR, TAR.GZ, TGZ
+
+**修改文件**:
+- ✅ `backend/src/services/fileService.ts` - 压缩和解压逻辑修复
+
+**技术实现**:
+- 压缩目录：`archive.directory(validPath, path.basename(filePath))`
+- 压缩文件：`archive.file(validPath, { name: path.basename(filePath) })`
+- 解压 ZIP：`extractZip()`
+- 解压 TAR：`tar -xf`
+- 解压 TAR.GZ：`tar -xzf`
+

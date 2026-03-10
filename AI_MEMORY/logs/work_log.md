@@ -5514,3 +5514,75 @@ mac-panel update   # 更新版本
 - 收集用户反馈
 - 优化安装体验
 - 添加更多安装方法（Docker等）
+
+## 2026-03-10 13:10 - 修复压缩和解压功能 ✅
+
+### 任务
+修复文件管理中的压缩和解压功能，支持文件夹及其所有内容的压缩。
+
+### 问题发现
+1. **压缩功能问题**：
+   - 只能压缩文件，无法正确压缩目录
+   - 压缩时使用 `path.basename()` 导致目录内容丢失
+   - 压缩目录时只有空目录名，没有递归添加内容
+
+2. **解压功能问题**：
+   - 只支持 .zip 格式
+   - 不支持 .tar 和 .tar.gz 格式
+
+### 实现方案
+
+**压缩功能修复**：
+```typescript
+// 旧代码（错误）
+archive.file(validPath, { name: path.basename(filePath) });
+
+// 新代码（正确）
+if (stats.isDirectory()) {
+  // 对于目录，使用 directory() 方法递归添加所有内容
+  archive.directory(validPath, path.basename(filePath));
+} else {
+  // 对于文件，只添加文件名
+  archive.file(validPath, { name: path.basename(filePath) });
+}
+```
+
+**解压功能修复**：
+```typescript
+// 新增支持多种格式
+if (validSource.endsWith('.zip')) {
+  await extractZip(validSource, { dir: path.resolve(validTarget) });
+} else if (validSource.endsWith('.tar.gz') || validSource.endsWith('.tgz')) {
+  await execAsync(`tar -xzf "${validSource}" -C "${validTarget}"`);
+} else if (validSource.endsWith('.tar')) {
+  await execAsync(`tar -xf "${validSource}" -C "${validTarget}"`);
+} else {
+  throw new Error('Unsupported archive format. Supported formats: .zip, .tar, .tar.gz');
+}
+```
+
+### 测试结果
+
+**ZIP 格式测试**：
+- ✅ 压缩目录和文件成功
+- ✅ 目录结构完整保留
+- ✅ 子文件夹和文件正确包含
+- ✅ 解压功能正常
+
+**TAR.GZ 格式测试**：
+- ✅ 压缩功能正常
+- ✅ 解压功能正常
+- ✅ 目录结构保留
+
+### 修改文件
+- ✅ `backend/src/services/fileService.ts` - 修复压缩和解压逻辑
+
+### Git 操作
+- ✅ 提交修复代码
+- ✅ 推送到 GitHub
+
+### 技术要点
+- archiver 库的 `directory()` 方法可以递归添加目录
+- 系统的 tar 命令用于处理 tar/tar.gz 格式
+- 正确处理文件和目录的不同压缩方式
+

@@ -48,9 +48,17 @@ cd ..
 echo ""
 echo "✅ Mac Panel 已启动！"
 echo ""
+
+# 获取本机IP
+LOCAL_IP=$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || echo "localhost")
+
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "  📱 前端地址: http://localhost:5173"
 echo "  🔌 后端地址: http://localhost:3001"
+echo ""
+echo "  📡 局域网访问:"
+echo "     前端: http://$LOCAL_IP:5173"
+echo "     后端: http://$LOCAL_IP:3001"
 echo ""
 echo "  👤 默认账号: admin"
 echo "  🔑 默认密码: admin123"

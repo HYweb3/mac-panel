@@ -20,8 +20,11 @@ curl -fsSL https://raw.githubusercontent.com/HYweb3/mac-panel/master/web-install
 **安装完成后访问**：
 - 🌐 **前端界面**：http://localhost:5173
 - 🔧 **后端 API**：http://localhost:3001
+- 📡 **局域网访问**：http://192.168.0.77:5173
 
 **默认账号**：admin / admin123
+
+> **注意**: 服务已配置为监听 `0.0.0.0`，可从局域网内任何设备访问
 
 ### 手动安装
 
