@@ -55,7 +55,10 @@ sudo ./install.sh
 mac-panel status
 
 # 访问 Web 界面
-# 浏览器打开: http://localhost:3001
+# 前端界面: http://localhost:5173
+# 或: http://[你的IP]:5173
+#
+# 后端 API: http://localhost:3001
 # 或: http://[你的IP]:3001
 ```
 
@@ -70,14 +73,16 @@ mac-panel status
 ps aux | grep "mac-panel/backend.*app.js"
 
 # 3. 检查端口
-lsof -ti :3001
+lsof -ti :3001  # 后端端口
+lsof -ti :5173  # 前端端口（开发模式）
 
 # 4. 检查日志
 mac-panel logs
 ```
 
 ### Web 界面检查
-- [ ] 能够访问 http://localhost:3001
+- [ ] 能够访问前端界面 http://localhost:5173
+- [ ] 能够访问后端 API http://localhost:3001
 - [ ] 能够看到登录界面
 - [ ] 能够使用默认账号登录（admin/admin123）
 - [ ] 能够看到主控面板

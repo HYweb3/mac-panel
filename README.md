@@ -17,7 +17,10 @@ curl -fsSL https://raw.githubusercontent.com/HYweb3/mac-panel/master/web-install
 - 👤 创建服务用户和配置权限
 - 🔨 构建并启动服务
 
-**安装完成后访问**：http://localhost:3001
+**安装完成后访问**：
+- 🌐 **前端界面**：http://localhost:5173
+- 🔧 **后端 API**：http://localhost:3001
+
 **默认账号**：admin / admin123
 
 ### 手动安装
@@ -222,6 +225,47 @@ PORT=3001
 FRONTEND_PORT=5173
 NODE_ENV=development
 JWT_SECRET=your-secret-key-change-in-production
+```
+
+## 📡 服务端口说明
+
+### 开发环境
+
+| 服务 | 端口 | 协议 | 说明 |
+|------|------|------|------|
+| **前端界面** | 5173 | HTTP | Vite 开发服务器 |
+| **后端 API** | 3001 | HTTP | Express API 服务器 |
+| 系统监控 WebSocket | 3001 | WebSocket | `/ws/system-stats` |
+| 终端 WebSocket | 3002 | WebSocket | `/ws/terminal` |
+| 浏览器 WebSocket | 3003 | WebSocket | `/ws/browser` |
+
+### 生产环境
+
+生产环境建议使用 Nginx 反向代理统一端口访问：
+
+```nginx
+# 前端界面（80/443）
+server {
+    listen 80;
+    server_name your-domain.com;
+
+    location / {
+        proxy_pass http://localhost:5173;
+    }
+}
+
+# 后端 API（/api）
+location /api {
+    proxy_pass http://localhost:3001;
+}
+
+# WebSocket 代理
+location /ws {
+    proxy_pass http://localhost:3001;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+}
 ```
 
 ## 权限系统

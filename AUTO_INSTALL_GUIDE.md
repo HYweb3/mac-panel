@@ -19,7 +19,10 @@ curl -fsSL https://raw.githubusercontent.com/HYweb3/mac-panel/master/web-install
 - ⚙️ 配置环境和服务
 - 🚀 启动 Mac Panel 服务
 
-**安装完成后访问**：http://localhost:3001
+**安装完成后访问**：
+- 🌐 **前端界面**：http://localhost:5173
+- 🔧 **后端 API**：http://localhost:3001
+
 **默认账号**：admin / admin123
 
 ---
@@ -89,11 +92,25 @@ chmod +x install.sh
 安装完成后，可以通过以下地址访问：
 
 ### 本地访问
+
+**前端界面（Web UI）**：
+```
+http://localhost:5173
+```
+
+**后端 API（直接访问）**：
 ```
 http://localhost:3001
 ```
 
 ### 局域网访问
+
+**前端界面**：
+```
+http://[你的IP地址]:5173
+```
+
+**后端 API**：
 ```
 http://[你的IP地址]:3001
 ```
@@ -102,6 +119,16 @@ http://[你的IP地址]:3001
 ```bash
 ipconfig getifaddr en0
 ```
+
+### 📡 服务端口说明
+
+- **前端端口**: 5173 (Vite 开发服务器)
+- **后端端口**: 3001 (Express API 服务器)
+- **系统监控 WebSocket**: ws://localhost:3001/ws/system-stats
+- **终端 WebSocket**: ws://localhost:3002/ws/terminal
+- **浏览器 WebSocket**: ws://localhost:3003/ws/browser
+
+> **注意**: 生产环境建议使用 Nginx 反向代理统一 80/443 端口访问
 
 ## 🔑 默认账号
 
