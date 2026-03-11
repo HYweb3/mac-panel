@@ -326,6 +326,67 @@ export const compressFiles = async (paths: string[], targetPath: string, format:
     zlib: format === 'zip' ? { level: 9 } : undefined
   });
 
+  // Directories and files to exclude from compression
+  const excludePatterns = [
+    'node_modules',
+    '.git',
+    'dist',
+    'build',
+    'unpackage',
+    '.vscode',
+    '.idea',
+    'coverage',
+    '.next',
+    '.nuxt',
+    'tmp',
+    'temp',
+    '.DS_Store',
+    'Thumbs.db',
+    '*.log'
+  ];
+
+  // Check if a path should be excluded
+  const shouldExclude = (itemPath: string): boolean => {
+    const itemName = path.basename(itemPath);
+    return excludePatterns.some(pattern => {
+      // Simple pattern matching
+      if (pattern.includes('*')) {
+        const regex = new RegExp(pattern.replace('*', '.*'));
+        return regex.test(itemName);
+      }
+      return itemName === pattern || itemPath.endsWith(`/${pattern}`);
+    });
+  };
+
+  // Recursively add directory contents with exclusion
+  const addDirectoryToArchive = (dirPath: string, archivePath: string) => {
+    const items = fs.readdirSync(dirPath);
+
+    items.forEach(item => {
+      const itemPath = path.join(dirPath, item);
+      const relativePath = path.relative(dirPath, itemPath);
+      const archiveItemPath = path.join(archivePath, relativePath);
+
+      // Check if this item should be excluded
+      if (shouldExclude(itemPath)) {
+        console.log(`[Compress] Excluding: ${itemPath}`);
+        return;
+      }
+
+      try {
+        const stats = fs.statSync(itemPath);
+
+        if (stats.isDirectory()) {
+          addDirectoryToArchive(itemPath, archiveItemPath);
+        } else if (stats.isFile()) {
+          archive.file(itemPath, { name: archiveItemPath });
+        }
+      } catch (error) {
+        console.warn(`[Compress] Skipping ${itemPath}:`, error);
+      }
+    });
+  };
+
   return new Promise((resolve, reject) => {
     output.on('close', () => {
       resolve({ success: true, size: archive.pointer() });
@@ -341,6 +402,13 @@ export const compressFiles = async (paths: string[], targetPath: string, format:
       }
     });
 
+    archive.on('progress', (progress) => {
+      // Log progress for large archives
+      if (progress.entries.processed % 100 === 0) {
+        console.log(`[Compress] Progress: ${progress.entries.processed} files, ${archive.pointer()} bytes`);
+      }
+    });
+
     archive.pipe(output);
 
     // Add files/directories to archive
@@ -349,10 +417,11 @@ export const compressFiles = async (paths: string[], targetPath: string, format:
       const stats = fs.statSync(validPath);
 
       if (stats.isDirectory()) {
-        // For directories, add the entire directory with its contents
-        archive.directory(validPath, path.basename(filePath));
+        // For directories, add with exclusion rules
+        console.log(`[Compress] Adding directory: ${validPath}`);
+        addDirectoryToArchive(validPath, path.basename(filePath));
       } else {
-        // For files, add with the filename (not full path to avoid nested structure)
+        // For files, add directly
         archive.file(validPath, { name: path.basename(filePath) });
       }
     });
