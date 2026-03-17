@@ -29,11 +29,16 @@ yarn-error.log*
 backend/data/db.json
 backend/data/db-backup*.json
 backend/data/backups/
+backend/data/favorites.json
 
 # Runtime data
 backend/data/uploads/
 backend/data/temp/
 backend/data/cache/
+
+# Recycle bin
+backend/.recycle_bin/
+backend/.recycle_bin/.metadata.json
 
 # PID files
 *.pid
@@ -95,3 +100,6 @@ dev_test.md
 check-*.sh
 fix-*.sh
 backend.pid
+
+# AI memory and work logs
+AI_MEMORY/logs/
