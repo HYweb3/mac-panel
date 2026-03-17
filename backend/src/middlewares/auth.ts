@@ -30,6 +30,6 @@ export const generateToken = (userId: string, username: string) => {
   return jwt.sign(
     { userId, username },
     JWT_SECRET,
-    { expiresIn: '7d' }
+    { expiresIn: '90d' } // 延长到90天，减少频繁登录
   );
 };

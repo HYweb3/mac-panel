@@ -77,8 +77,8 @@ router.post('/compress', requirePermission('files', 'write'), async (req: AuthRe
 // Extract archive
 router.post('/extract', requirePermission('files', 'write'), async (req: AuthRequest, res: Response) => {
   try {
-    const { sourcePath, targetPath } = req.body;
-    const result = await fileService.extractArchive(sourcePath, targetPath);
+    const { sourcePath, targetPath, password } = req.body;
+    const result = await fileService.extractArchive(sourcePath, targetPath, password);
     res.json(result);
   } catch (error: any) {
     res.status(500).json({ error: error.message });

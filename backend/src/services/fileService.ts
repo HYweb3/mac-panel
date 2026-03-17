@@ -328,21 +328,13 @@ export const compressFiles = async (paths: string[], targetPath: string, format:
 
   // Directories and files to exclude from compression
   const excludePatterns = [
-    'node_modules',
-    '.git',
-    'dist',
-    'build',
-    'unpackage',
-    '.vscode',
-    '.idea',
-    'coverage',
-    '.next',
-    '.nuxt',
-    'tmp',
-    'temp',
-    '.DS_Store',
-    'Thumbs.db',
-    '*.log'
+    'node_modules',  // Node.js 依赖
+    '.git',          // Git 仓库
+    '.next',         // Next.js 构建产物
+    '.nuxt',         // Nuxt.js 构建产物
+    '.DS_Store',     // macOS 系统文件
+    'Thumbs.db',     // Windows 系统文件
+    '*.log'          // 日志文件
   ];
 
   // Check if a path should be excluded
@@ -431,25 +423,144 @@ export const compressFiles = async (paths: string[], targetPath: string, format:
 };
 
 // Extract archive
-export const extractArchive = async (sourcePath: string, targetPath: string) => {
+export const extractArchive = async (sourcePath: string, targetPath: string, password?: string) => {
   const validSource = validatePath(sourcePath);
   const validTarget = validatePath(targetPath);
 
-  await fs.ensureDir(validTarget);
-
-  if (validSource.endsWith('.zip')) {
-    await extractZip(validSource, { dir: path.resolve(validTarget) });
-  } else if (validSource.endsWith('.tar.gz') || validSource.endsWith('.tgz')) {
-    // Extract tar.gz using system tar command
-    await execAsync(`tar -xzf "${validSource}" -C "${validTarget}"`);
-  } else if (validSource.endsWith('.tar')) {
-    // Extract tar using system tar command
-    await execAsync(`tar -xf "${validSource}" -C "${validTarget}"`);
-  } else {
-    throw new Error('Unsupported archive format. Supported formats: .zip, .tar, .tar.gz');
+  // 检查源文件是否存在
+  if (!(await fs.pathExists(validSource))) {
+    throw new Error('压缩文件不存在');
   }
 
-  return { success: true };
+  // 确保目标目录存在
+  await fs.ensureDir(validTarget);
+
+  try {
+    if (validSource.endsWith('.zip') || validSource.endsWith('.ZIP')) {
+      // 处理 ZIP 文件，支持密码
+      await extractZipWithPassword(validSource, validTarget, password);
+    } else if (validSource.endsWith('.tar.gz') || validSource.endsWith('.tgz') ||
+               validSource.endsWith('.TAR.GZ') || validSource.endsWith('.TGZ')) {
+      // 解压 tar.gz 使用系统 tar 命令
+      await extractTarGz(validSource, validTarget);
+    } else if (validSource.endsWith('.tar') || validSource.endsWith('.TAR')) {
+      // 解压 tar 使用系统 tar 命令
+      await extractTar(validSource, validTarget);
+    } else if (validSource.endsWith('.rar') || validSource.endsWith('.RAR')) {
+      // 解压 RAR 使用系统 unrar 命令
+      await extractRar(validSource, validTarget, password);
+    } else if (validSource.endsWith('.7z') || validSource.endsWith('.7Z')) {
+      // 解压 7z 使用系统 7z 命令
+      await extract7z(validSource, validTarget, password);
+    } else {
+      throw new Error('不支持的压缩格式。支持的格式: .zip, .tar, .tar.gz, .rar, .7z');
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    // 增强错误处理
+    if (error.message && error.message.includes('password')) {
+      throw new Error('密码错误或压缩文件需要密码');
+    } else if (error.message && error.message.includes('corrupt')) {
+      throw new Error('压缩文件已损坏');
+    } else if (error.code === 'EACCES') {
+      throw new Error('权限不足，请检查目录权限');
+    } else if (error.code === 'ENOSPC') {
+      throw new Error('磁盘空间不足');
+    } else {
+      throw new Error(error.message || '解压失败');
+    }
+  }
+};
+
+// 解压 ZIP 文件（支持密码）
+const extractZipWithPassword = async (sourcePath: string, targetPath: string, password?: string) => {
+  try {
+    // 首先尝试使用 extract-zip 库（不支持密码）
+    if (!password) {
+      try {
+        await extractZip(sourcePath, { dir: path.resolve(targetPath) });
+        return;
+      } catch (error: any) {
+        // 如果是密码相关错误，尝试使用系统命令
+        if (error.message && (error.message.includes('password') || error.message.includes('encrypted'))) {
+          console.log('[Extract] ZIP file may require password, trying system command...');
+        } else {
+          throw error;
+        }
+      }
+    }
+
+    // 如果有密码或 extract-zip 失败，使用 unzip 命令（支持密码）
+    const unzipCommand = password
+      ? `unzip -o -P "${password}" "${sourcePath}" -d "${targetPath}"`
+      : `unzip -o "${sourcePath}" -d "${targetPath}"`;
+
+    await execAsync(unzipCommand);
+  } catch (error: any) {
+    // 如果 unzip 命令失败，尝试其他方法
+    if (error.message && error.message.includes('command not found')) {
+      throw new Error('系统未安装 unzip 命令，请安装: brew install unzip');
+    }
+    throw error;
+  }
+};
+
+// 解压 tar.gz
+const extractTarGz = async (sourcePath: string, targetPath: string) => {
+  try {
+    // 使用 gtar 或 tar
+    await execAsync(`tar -xzf "${sourcePath}" -C "${targetPath}" 2>&1`);
+  } catch (error: any) {
+    // Windows 兼容：处理路径中的空格和特殊字符
+    const escapedSource = sourcePath.replace(/ /g, '\\ ').replace(/'/g, "\\'");
+    const escapedTarget = targetPath.replace(/ /g, '\\ ').replace(/'/g, "\\'");
+    await execAsync(`gtar -xzf "${escapedSource}" -C "${escapedTarget}" 2>&1 || tar -xzf "${escapedSource}" -C "${escapedTarget}" 2>&1`);
+  }
+};
+
+// 解压 tar
+const extractTar = async (sourcePath: string, targetPath: string) => {
+  try {
+    await execAsync(`tar -xf "${sourcePath}" -C "${targetPath}" 2>&1`);
+  } catch (error: any) {
+    // Windows 兼容
+    const escapedSource = sourcePath.replace(/ /g, '\\ ').replace(/'/g, "\\'");
+    const escapedTarget = targetPath.replace(/ /g, '\\ ').replace(/'/g, "\\'");
+    await execAsync(`gtar -xf "${escapedSource}" -C "${escapedTarget}" 2>&1 || tar -xf "${escapedSource}" -C "${escapedTarget}" 2>&1`);
+  }
+};
+
+// 解压 RAR
+const extractRar = async (sourcePath: string, targetPath: string, password?: string) => {
+  const rarCommand = password
+    ? `unrar x -p"${password}" -y "${sourcePath}" "${targetPath}"`
+    : `unrar x -y "${sourcePath}" "${targetPath}"`;
+
+  try {
+    await execAsync(rarCommand);
+  } catch (error: any) {
+    if (error.message && error.message.includes('command not found')) {
+      throw new Error('系统未安装 unrar 命令，请安装: brew install unrar');
+    }
+    throw error;
+  }
+};
+
+// 解压 7z
+const extract7z = async (sourcePath: string, targetPath: string, password?: string) => {
+  const pzCommand = password
+    ? `7z x -p"${password}" -y "${sourcePath}" -o"${targetPath}"`
+    : `7z x -y "${sourcePath}" -o"${targetPath}"`;
+
+  try {
+    await execAsync(pzCommand);
+  } catch (error: any) {
+    if (error.message && error.message.includes('command not found')) {
+      throw new Error('系统未安装 7z 命令，请安装: brew install p7zip');
+    }
+    throw error;
+  }
 };
 
 // Helper: Execute shell command

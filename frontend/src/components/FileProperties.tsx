@@ -10,11 +10,13 @@ import {
   Space,
   Typography,
   Divider,
+  Input,
 } from 'antd';
 import {
   FileOutlined,
   FolderOutlined,
   CheckCircleOutlined,
+  CopyOutlined,
 } from '@ant-design/icons';
 
 const { Text } = Typography;
@@ -186,6 +188,101 @@ const FileProperties: React.FC<FilePropertiesProps> = ({
     }
   };
 
+  // 复制到剪贴板
+  const copyToClipboard = async (text: string, successMsg: string) => {
+    console.log('开始复制:', { text, successMsg });
+
+    try {
+      // 确保文本不为空
+      if (!text || text.trim() === '') {
+        message.error('复制内容为空');
+        console.error('复制内容为空');
+        return;
+      }
+
+      // 尝试使用现代 Clipboard API
+      if (navigator.clipboard && window.isSecureContext) {
+        console.log('使用 Clipboard API');
+        try {
+          await navigator.clipboard.writeText(text);
+          console.log('Clipboard API 复制成功');
+          message.success(successMsg);
+          return;
+        } catch (clipboardError) {
+          console.warn('Clipboard API 失败，尝试传统方法:', clipboardError);
+          // 继续尝试传统方法
+        }
+      }
+
+      // Fallback: 使用传统方法
+      console.log('使用传统复制方法');
+
+      // 创建一个更可靠的 textarea
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+
+      // 关键样式设置
+      textArea.style.position = 'fixed';
+      textArea.style.left = '0';
+      textArea.style.top = '0';
+      textArea.style.width = '2em';
+      textArea.style.height = '2em';
+      textArea.style.padding = '0';
+      textArea.style.border = 'none';
+      textArea.style.outline = 'none';
+      textArea.style.boxShadow = 'none';
+      textArea.style.background = 'transparent';
+      textArea.style.opacity = '0.01'; // 几乎透明
+      textArea.style.pointerEvents = 'none';
+      textArea.setAttribute('readonly', '');
+
+      document.body.appendChild(textArea);
+
+      // 先获取焦点
+      textArea.focus();
+
+      // 选择所有文本
+      textArea.select();
+      textArea.setSelectionRange(0, text.length);
+
+      // 强制重新获取焦点（某些浏览器需要）
+      textArea.focus();
+
+      try {
+        const successful = document.execCommand('copy');
+        console.log('传统方法复制结果:', successful);
+
+        if (successful) {
+          // 验证复制是否真的成功
+          try {
+            const clipboardText = await navigator.clipboard.readText();
+            if (clipboardText === text) {
+              console.log('复制验证成功');
+              message.success(successMsg);
+            } else {
+              console.warn('复制验证失败，剪贴板内容不匹配');
+              message.warning('复制可能未成功，请手动检查');
+            }
+          } catch (verifyError) {
+            // 如果无法验证，相信 execCommand 的结果
+            console.log('无法验证复制结果，相信 execCommand');
+            message.success(successMsg);
+          }
+        } else {
+          message.error('复制失败，请手动复制');
+        }
+      } catch (err) {
+        console.error('传统方法复制错误:', err);
+        message.error('复制失败，请手动复制');
+      } finally {
+        document.body.removeChild(textArea);
+      }
+    } catch (error) {
+      console.error('复制错误:', error);
+      message.error('复制失败: ' + (error as Error).message);
+    }
+  };
+
   useEffect(() => {
     if (visible && filePath) {
       loadFileInfo();
@@ -225,7 +322,7 @@ const FileProperties: React.FC<FilePropertiesProps> = ({
           <span>文件属性</span>
         </Space>
       }
-      width={600}
+      width={700}
       footer={[
         <Button key="cancel" onClick={onClose}>
           取消
@@ -245,9 +342,41 @@ const FileProperties: React.FC<FilePropertiesProps> = ({
         {/* 基本信息 */}
         <div>
           <Divider orientation="left">基本信息</Divider>
-          <Descriptions column={2} size="small">
+          <Descriptions column={1} size="small" bordered>
             <Descriptions.Item label="文件名">
-              {fileInfo.path.split('/').pop()}
+              <Space>
+                <Text>{fileInfo.path.split('/').filter(Boolean).pop() || (fileInfo.path === '/' ? '/' : 'unknown')}</Text>
+                <Button
+                  size="small"
+                  icon={<CopyOutlined />}
+                  onClick={async () => {
+                    const parts = fileInfo.path.split('/').filter(Boolean);
+                    const fileName = parts.length > 0 ? parts[parts.length - 1] : (fileInfo.path === '/' ? '/' : fileInfo.path);
+                    console.log('复制文件名:', { fileName, originalPath: fileInfo.path });
+                    await copyToClipboard(fileName, '文件名已复制');
+                  }}
+                >
+                  复制
+                </Button>
+              </Space>
+            </Descriptions.Item>
+            <Descriptions.Item label="完整路径">
+              <Space.Compact style={{ width: '100%' }}>
+                <Input
+                  value={fileInfo.path}
+                  readOnly
+                  style={{ fontFamily: 'monospace' }}
+                />
+                <Button
+                  icon={<CopyOutlined />}
+                  onClick={async () => {
+                    console.log('复制完整路径:', fileInfo.path);
+                    await copyToClipboard(fileInfo.path, '完整路径已复制');
+                  }}
+                >
+                  复制
+                </Button>
+              </Space.Compact>
             </Descriptions.Item>
             <Descriptions.Item label="类型">
               <Tag icon={fileInfo.isDirectory ? <FolderOutlined /> : <FileOutlined />}>
@@ -260,10 +389,10 @@ const FileProperties: React.FC<FilePropertiesProps> = ({
             <Descriptions.Item label="权限数值">
               <Tag color="blue">{calculateOctal()}</Tag>
             </Descriptions.Item>
-            <Descriptions.Item label="修改时间" span={2}>
+            <Descriptions.Item label="修改时间">
               {formatDate(fileInfo.modified)}
             </Descriptions.Item>
-            <Descriptions.Item label="符号权限" span={2}>
+            <Descriptions.Item label="符号权限">
               <Text code>{getSymbolicPermissions()}</Text>
             </Descriptions.Item>
           </Descriptions>

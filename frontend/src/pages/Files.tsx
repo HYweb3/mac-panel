@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useGlobalEditor } from '../context/GlobalEditorContext';
 import { Table, Button, Input, Modal, Form, message, Popconfirm, Space, Tag, Dropdown, Breadcrumb, Alert, Progress, Upload, Radio, Drawer, List, Empty, Spin, Typography } from 'antd';
@@ -105,7 +105,7 @@ export default function Files() {
   const { currentPath, setCurrentPath } = useFileStore();
   const API_BASE_URL = import.meta.env.VITE_API_URL;
 
-  const loadFiles = async (path?: string) => {
+  const loadFiles = useCallback(async (path?: string) => {
     const targetPath = path || currentPath;
     setLoading(true);
     try {
@@ -125,7 +125,7 @@ export default function Files() {
     finally {
       setLoading(false);
     }
-  };
+  }, [currentPath]);
 
   useEffect(() => {
     loadFiles();
@@ -374,13 +374,15 @@ export default function Files() {
     } catch (error) { message.error('读取失败'); }
   };
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async (closeAfterSave: boolean = true) => {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`${API_BASE_URL}/api/files/save`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ path: currentEditPath, content: editorContent }) });
       if (response.ok) {
         message.success('保存成功');
-        setEditModalOpen(false);
+        if (closeAfterSave) {
+          setEditModalOpen(false);
+        }
         loadFiles();
       } else {
         const error = await response.json();
@@ -390,7 +392,7 @@ export default function Files() {
       console.error('保存文件错误:', error);
       message.error('保存失败');
     }
-  };
+  }, [currentEditPath, editorContent, loadFiles]);
 
   const handleCopy = () => {
     if (selectedItems.length === 0) return message.warning('请先选择文件');
@@ -453,10 +455,12 @@ export default function Files() {
       const token = localStorage.getItem('token');
       const values = await extractForm.validateFields();
       const destPath = values.destinationPath || currentPath;
+      const password = values.password || undefined;
+
       const response = await fetch(`${API_BASE_URL}/api/files/extract`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sourcePath: extractFile.path, targetPath: destPath })  // 修复：改为 targetPath
+        body: JSON.stringify({ sourcePath: extractFile.path, targetPath: destPath, password })
       });
       if (response.ok) {
         message.success('解压成功');
@@ -1113,33 +1117,8 @@ export default function Files() {
         e.preventDefault();
         e.stopPropagation();
 
-        // 直接执行保存逻辑，避免闭包问题
-        try {
-          const token = localStorage.getItem('token');
-          const response = await fetch(`${API_BASE_URL}/api/files/save`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              path: currentEditPath,
-              content: editorContent
-            })
-          });
-
-          if (response.ok) {
-            message.success('保存成功');
-            setEditModalOpen(false);
-            loadFiles();
-          } else {
-            const error = await response.json();
-            message.error(`保存失败: ${error.error || '未知错误'}`);
-          }
-        } catch (error) {
-          console.error('保存文件错误:', error);
-          message.error('保存失败');
-        }
+        // 调用统一的保存函数，保存后不关闭编辑器
+        await handleSave(false);
       }
 
       // Esc 关闭编辑器
@@ -1157,7 +1136,7 @@ export default function Files() {
         window.removeEventListener('keydown', handleKeyDown, true);
       };
     }
-  }, [editModalOpen, currentEditPath, editorContent]); // 包含所有使用的状态
+  }, [editModalOpen, handleSave]); // 依赖 handleSave 函数
 
   const getFileIcon = (name: string, type: string) => {
     if (type === 'directory') {
@@ -1329,6 +1308,115 @@ export default function Files() {
               })}
             </Breadcrumb>
 
+            {/* 复制当前路径按钮 */}
+            <Button
+              size="small"
+              icon={<CopyOutlined />}
+              onClick={async () => {
+                console.log('开始复制路径:', currentPath);
+                try {
+                  // 确保路径不为空
+                  if (!currentPath || currentPath.trim() === '') {
+                    message.error('路径为空');
+                    return;
+                  }
+
+                  // 尝试使用现代 Clipboard API
+                  if (navigator.clipboard && window.isSecureContext) {
+                    console.log('使用 Clipboard API');
+                    try {
+                      await navigator.clipboard.writeText(currentPath);
+                      console.log('Clipboard API 复制成功');
+                      message.success('路径已复制: ' + currentPath);
+                      return;
+                    } catch (clipboardError) {
+                      console.warn('Clipboard API 失败，尝试传统方法:', clipboardError);
+                      // 继续尝试传统方法
+                    }
+                  }
+
+                  // Fallback: 使用传统方法
+                  console.log('使用传统复制方法');
+
+                  // 创建一个更可靠的 textarea
+                  const textArea = document.createElement('textarea');
+                  textArea.value = currentPath;
+
+                  // 关键样式设置
+                  textArea.style.position = 'fixed';
+                  textArea.style.left = '0';
+                  textArea.style.top = '0';
+                  textArea.style.width = '2em';
+                  textArea.style.height = '2em';
+                  textArea.style.padding = '0';
+                  textArea.style.border = 'none';
+                  textArea.style.outline = 'none';
+                  textArea.style.boxShadow = 'none';
+                  textArea.style.background = 'transparent';
+                  textArea.style.opacity = '0.01'; // 几乎透明
+                  textArea.style.pointerEvents = 'none';
+                  textArea.setAttribute('readonly', '');
+
+                  document.body.appendChild(textArea);
+
+                  // 先获取焦点
+                  textArea.focus();
+
+                  // 选择所有文本
+                  textArea.select();
+                  textArea.setSelectionRange(0, currentPath.length);
+
+                  // 强制重新获取焦点（某些浏览器需要）
+                  textArea.focus();
+
+                  try {
+                    const successful = document.execCommand('copy');
+                    console.log('传统方法复制结果:', successful);
+
+                    if (successful) {
+                      // 验证复制是否真的成功
+                      try {
+                        const clipboardText = await navigator.clipboard.readText();
+                        if (clipboardText === currentPath) {
+                          console.log('复制验证成功');
+                          message.success('路径已复制: ' + currentPath);
+                        } else {
+                          console.warn('复制验证失败，剪贴板内容不匹配');
+                          message.warning('复制可能未成功，请手动检查');
+                        }
+                      } catch (verifyError) {
+                        // 如果无法验证，相信 execCommand 的结果
+                        console.log('无法验证复制结果，相信 execCommand');
+                        message.success('路径已复制: ' + currentPath);
+                      }
+                    } else {
+                      message.error('复制失败，请手动复制');
+                    }
+                  } catch (err) {
+                    console.error('传统方法复制错误:', err);
+                    message.error('复制失败，请手动复制');
+                  } finally {
+                    document.body.removeChild(textArea);
+                  }
+                } catch (err) {
+                  console.error('复制错误:', err);
+                  message.error('复制失败: ' + (err as Error).message);
+                }
+              }}
+              title="复制当前路径"
+            >
+              复制
+            </Button>
+
+            <Button
+              size="small"
+              icon={<HomeOutlined />}
+              onClick={handleGoToUserHome}
+              title="跳转到用户主目录"
+            >
+              用户
+            </Button>
+
             <Space.Compact style={{ width: 250, marginRight: 16 }}>
               <Input
                 placeholder="搜索文件..."
@@ -1350,7 +1438,6 @@ export default function Files() {
                 搜索
               </Button>
             </Space.Compact>
-            <Button icon={<HomeOutlined />} onClick={handleGoToUserHome} title="跳转到用户主目录">用户目录</Button>
             <Button icon={<ReloadOutlined />} onClick={() => loadFiles()}>刷新</Button>
           </div>
           <div className="files-nav-right">
@@ -1587,8 +1674,15 @@ export default function Files() {
       </Modal>
       <Modal title={`解压文件: ${extractFile?.name || ''}`} open={extractModalOpen} onCancel={() => setExtractModalOpen(false)} footer={null}>
         <Form form={extractForm} onFinish={handleExtract} layout="vertical">
-          <Form.Item name="destinationPath" label="解压目录" rules={[{ required: true, message: '请输入解压目录' }]} initialValue={currentPath}><Input placeholder={currentPath} /></Form.Item>
-          <Form.Item><Button type="primary" htmlType="submit" block>开始解压</Button></Form.Item>
+          <Form.Item name="destinationPath" label="解压目录" rules={[{ required: true, message: '请输入解压目录' }]} initialValue={currentPath}>
+            <Input placeholder={currentPath} />
+          </Form.Item>
+          <Form.Item name="password" label="密码（可选）" extra="如果压缩包有密码，请在此输入">
+            <Input.Password placeholder="留空表示无密码" />
+          </Form.Item>
+          <Form.Item>
+            <Button type="primary" htmlType="submit" block>开始解压</Button>
+          </Form.Item>
         </Form>
       </Modal>
 
