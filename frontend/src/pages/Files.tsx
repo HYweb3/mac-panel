@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useGlobalEditor } from '../context/GlobalEditorContext';
-import { Table, Button, Input, Modal, Form, message, Popconfirm, Space, Tag, Dropdown, Breadcrumb, Alert, Progress, Upload, Radio, Drawer, List, Empty, Spin, Typography } from 'antd';
+import { Table, Button, Input, Modal, Form, message, Popconfirm, Space, Tag, Dropdown, Breadcrumb, Alert, Progress, Upload, Radio, Drawer, List, Empty, Spin, Typography, Divider } from 'antd';
 import { HomeOutlined as BreadcrumbHomeIcon } from '@ant-design/icons';
 import type { BreadcrumbProps } from 'antd';
-import { FolderOutlined, FileOutlined, PlusOutlined, UploadOutlined, DownloadOutlined, DeleteOutlined, CopyOutlined, ScissorOutlined, ReloadOutlined, EditOutlined, HomeOutlined, FileZipOutlined, FolderOpenOutlined, SnippetsOutlined, FileTextOutlined, UndoOutlined, SearchOutlined, PictureOutlined, VideoCameraOutlined, AudioOutlined, FilePdfOutlined, FileWordOutlined, FileExcelOutlined, FilePptOutlined, FileMarkdownOutlined, CodeOutlined, DatabaseOutlined, ApiOutlined, SettingOutlined, FileAddOutlined, FolderAddOutlined, StarOutlined, StarFilled, InfoCircleOutlined } from '@ant-design/icons';
+import { FolderOutlined, FileOutlined, PlusOutlined, UploadOutlined, DownloadOutlined, DeleteOutlined, CopyOutlined, ScissorOutlined, ReloadOutlined, EditOutlined, HomeOutlined, FileZipOutlined, FolderOpenOutlined, SnippetsOutlined, FileTextOutlined, UndoOutlined, SearchOutlined, PictureOutlined, VideoCameraOutlined, AudioOutlined, FilePdfOutlined, FileWordOutlined, FileExcelOutlined, FilePptOutlined, FileMarkdownOutlined, CodeOutlined, DatabaseOutlined, ApiOutlined, SettingOutlined, FileAddOutlined, FolderAddOutlined, StarOutlined, StarFilled, InfoCircleOutlined, ShareAltOutlined, LinkOutlined } from '@ant-design/icons';
 import { useFileStore } from '../store';
 import Editor from '@monaco-editor/react';
 import FileProperties from '../components/FileProperties';
@@ -84,6 +84,14 @@ export default function Files() {
   // File properties state
   const [propertiesVisible, setPropertiesVisible] = useState(false);
   const [selectedFilePath, setSelectedFilePath] = useState<string>('');
+
+  // Share state
+  const [shareModalVisible, setShareModalVisible] = useState(false);
+  const [shareFile, setShareFile] = useState<FileItem | null>(null);
+  const [shareData, setShareData] = useState<any>(null);
+  const [shareLoading, setShareLoading] = useState(false);
+  const [shareExpiresIn, setShareExpiresIn] = useState<number>(0); // 0 = permanent
+  const [shareMaxDownloads, setShareMaxDownloads] = useState<number>(0); // 0 = unlimited
 
   // User home directory
   const [userHomeDir, setUserHomeDir] = useState<string>('/Users/www1');
@@ -509,6 +517,128 @@ export default function Files() {
       const response = await fetch(`${API_BASE_URL}/api/files/rename`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ path, newName }) });
       if (response.ok) { message.success('重命名成功'); loadFiles(); }
     } catch (error) { message.error('重命名失败'); }
+  };
+
+  // Share functions
+  const handleShare = async (file: FileItem) => {
+    setShareFile(file);
+    setShareData(null);
+    setShareExpiresIn(0); // Default: permanent
+    setShareMaxDownloads(0); // Default: unlimited
+    setShareModalVisible(true);
+
+    // Auto-create share
+    await createShare(file.path);
+  };
+
+  const createShare = async (filePath: string) => {
+    setShareLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const requestBody: any = { filePath };
+
+      // Add expiration if set
+      if (shareExpiresIn > 0) {
+        const expiresAt = new Date();
+        expiresAt.setHours(expiresAt.getHours() + shareExpiresIn);
+        requestBody.expiresAt = expiresAt.toISOString();
+      }
+
+      // Add max downloads if set
+      if (shareMaxDownloads > 0) {
+        requestBody.maxDownloads = shareMaxDownloads;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/files/share`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setShareData(result);
+        message.success('分享链接创建成功');
+      } else {
+        const error = await response.json();
+        message.error(`创建分享失败: ${error.error || '未知错误'}`);
+      }
+    } catch (error: any) {
+      message.error(`创建分享失败: ${error.message || '未知错误'}`);
+    } finally {
+      setShareLoading(false);
+    }
+  };
+
+  const copyShareLink = async () => {
+    if (!shareData) return;
+
+    const shareUrl = `${window.location.origin}${shareData.shareUrl}`;
+    console.log('尝试复制链接:', shareUrl);
+
+    // 方法1: 尝试使用 Clipboard API
+    if (navigator.clipboard && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        message.success('分享链接已复制到剪贴板');
+        console.log('Clipboard API 成功');
+        return;
+      } catch (err) {
+        console.error('Clipboard API failed:', err);
+      }
+    }
+
+    // 方法2: 使用传统方法（创建临时 textarea）
+    try {
+      const textArea = document.createElement('textarea');
+      textArea.value = shareUrl;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      textArea.style.top = '-999999px';
+      textArea.style.opacity = '0';
+      textArea.setAttribute('readonly', '');
+      document.body.appendChild(textArea);
+
+      // 选中文本
+      textArea.select();
+      textArea.setSelectionRange(0, 99999); // 移动端兼容
+
+      // 执行复制
+      const successful = document.execCommand('copy');
+      document.body.removeChild(textArea);
+
+      if (successful) {
+        message.success('分享链接已复制到剪贴板');
+        console.log('execCommand 成功');
+      } else {
+        throw new Error('execCommand failed');
+      }
+    } catch (err) {
+      console.error('复制失败:', err);
+      message.error('复制失败，请手动复制链接');
+    }
+  };
+
+  const updateShareSettings = async () => {
+    if (!shareFile) return;
+
+    // Delete old share and create new one with new settings
+    if (shareData) {
+      try {
+        const token = localStorage.getItem('token');
+        await fetch(`${API_BASE_URL}/api/files/share/${shareData.share.shareId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+      } catch (error) {
+        console.error('Failed to delete old share:', error);
+      }
+    }
+
+    await createShare(shareFile.path);
   };
 
   const handleUrlDownload = async () => {
@@ -1218,7 +1348,7 @@ export default function Files() {
   const getContextMenuItems = (record: FileItem) => {
     const closeMenu = () => setContextMenu({ ...contextMenu, visible: false, record: null });
     const items: any[] = [{ key: 'open', label: record.type === 'directory' ? '打开文件夹' : '打开文件', icon: <FolderOutlined />, onClick: () => { closeMenu(); handleFileClick(record); } }];
-    if (record.type === 'file') { items.push({ key: 'edit', label: '编辑', icon: <EditOutlined />, onClick: () => { closeMenu(); openFileInEditor(record.path, record.name); } }, { key: 'download', label: '下载', icon: <DownloadOutlined />, onClick: () => { closeMenu(); handleDownload(record); } }); }
+    if (record.type === 'file') { items.push({ key: 'edit', label: '编辑', icon: <EditOutlined />, onClick: () => { closeMenu(); openFileInEditor(record.path, record.name); } }, { key: 'download', label: '下载', icon: <DownloadOutlined />, onClick: () => { closeMenu(); handleDownload(record); } }, { key: 'share', label: '分享', icon: <ShareAltOutlined />, onClick: () => { closeMenu(); handleShare(record); } }); }
     items.push({ key: 'rename', label: '重命名', icon: <EditOutlined />, onClick: () => { closeMenu(); handleRename(record.path, record.name); } }, { key: 'copy', label: '复制', icon: <CopyOutlined />, onClick: () => { closeMenu(); setSelectedItems([record]); setSelectedRowKeys([record.path]); handleCopy(); } }, { key: 'cut', label: '剪切', icon: <ScissorOutlined />, onClick: () => { closeMenu(); setSelectedItems([record]); setSelectedRowKeys([record.path]); handleCut(); } });
     if (isArchive(record.name)) { items.push({ key: 'extract', label: '解压', icon: <FolderOpenOutlined />, onClick: () => { closeMenu(); setExtractFile(record); extractForm.setFieldsValue({ destinationPath: currentPath }); setExtractModalOpen(true); } }); }
     items.push({ type: 'divider' }, { key: 'properties', label: '属性', icon: <InfoCircleOutlined />, onClick: () => { closeMenu(); setSelectedFilePath(record.path); setPropertiesVisible(true); } }, { key: 'delete', label: '删除', danger: true, icon: <DeleteOutlined />, onClick: () => { closeMenu(); setSelectedItems([record]); setSelectedRowKeys([record.path]); Modal.confirm({ title: '确认删除', content: `确定要删除 ${record.name} 吗？`, onOk: handleDelete }); } });
@@ -1850,6 +1980,164 @@ export default function Files() {
           setPropertiesVisible(false);
         }}
       />
+
+      {/* 文件分享对话框 */}
+      <Modal
+        title={
+          <Space>
+            <ShareAltOutlined />
+            <span>文件分享</span>
+          </Space>
+        }
+        open={shareModalVisible}
+        onCancel={() => setShareModalVisible(false)}
+        footer={[
+          <Button key="close" onClick={() => setShareModalVisible(false)}>
+            关闭
+          </Button>,
+          shareData && (
+            <Button key="copy" type="primary" onClick={copyShareLink}>
+              复制分享链接
+            </Button>
+          ),
+        ]}
+        width={600}
+      >
+        {shareLoading ? (
+          <div style={{ textAlign: 'center', padding: '20px' }}>
+            <Spin size="large" />
+            <p style={{ marginTop: '10px' }}>正在创建分享链接...</p>
+          </div>
+        ) : shareData ? (
+          <div>
+            <Alert
+              message="分享链接创建成功"
+              description="复制下方链接分享给其他人，他们即可下载此文件"
+              type="success"
+              showIcon
+              style={{ marginBottom: 16 }}
+            />
+
+            <div style={{ marginBottom: 16 }}>
+              <Text strong>文件名：</Text>
+              <Text style={{ marginLeft: 8 }}>{shareFile?.name}</Text>
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <Text strong>分享链接：</Text>
+              <Input
+                id="share-link-input"
+                value={`${window.location.origin}${shareData.shareUrl}`}
+                readOnly
+                style={{ marginTop: 8 }}
+                onClick={(e) => {
+                  const input = e.target as HTMLInputElement;
+                  input.select();
+                  message.info('链接已选中，按 Ctrl+C 复制');
+                }}
+                addonAfter={
+                  <Button
+                    type="primary"
+                    size="small"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      copyShareLink();
+                    }}
+                    style={{ padding: '0 8px' }}
+                  >
+                    复制
+                  </Button>
+                }
+              />
+              <div style={{ marginTop: 8, fontSize: 12, color: '#999' }}>
+                💡 提示：点击输入框可选中链接，按 Ctrl+C 复制
+              </div>
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <Space direction="vertical" style={{ width: '100%' }}>
+                <div>
+                  <Text strong>创建时间：</Text>
+                  <Text style={{ marginLeft: 8 }}>
+                    {new Date(shareData.share.createdAt).toLocaleString('zh-CN')}
+                  </Text>
+                </div>
+                <div>
+                  <Text strong>下载次数：</Text>
+                  <Text style={{ marginLeft: 8 }}>
+                    {shareData.share.downloadCount}
+                    {shareData.share.maxDownloads && ` / ${shareData.share.maxDownloads}`}
+                  </Text>
+                </div>
+                {shareData.share.expiresAt && (
+                  <div>
+                    <Text strong>过期时间：</Text>
+                    <Text style={{ marginLeft: 8 }}>
+                      {new Date(shareData.share.expiresAt).toLocaleString('zh-CN')}
+                    </Text>
+                  </div>
+                )}
+              </Space>
+            </div>
+
+            <Divider />
+
+            <div>
+              <Text strong>分享设置：</Text>
+              <div style={{ marginTop: 12 }}>
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  <div>
+                    <Text>有效期：</Text>
+                    <Radio.Group
+                      value={shareExpiresIn}
+                      onChange={(e) => {
+                        setShareExpiresIn(e.target.value);
+                        updateShareSettings();
+                      }}
+                      style={{ marginLeft: 12 }}
+                    >
+                      <Radio.Button value={0}>永久</Radio.Button>
+                      <Radio.Button value={24}>1天</Radio.Button>
+                      <Radio.Button value={168}>7天</Radio.Button>
+                      <Radio.Button value={720}>30天</Radio.Button>
+                    </Radio.Group>
+                  </div>
+
+                  <div>
+                    <Text>最大下载次数：</Text>
+                    <Radio.Group
+                      value={shareMaxDownloads}
+                      onChange={(e) => {
+                        setShareMaxDownloads(e.target.value);
+                        updateShareSettings();
+                      }}
+                      style={{ marginLeft: 12 }}
+                    >
+                      <Radio.Button value={0}>无限制</Radio.Button>
+                      <Radio.Button value={1}>1次</Radio.Button>
+                      <Radio.Button value={5}>5次</Radio.Button>
+                      <Radio.Button value={10}>10次</Radio.Button>
+                    </Radio.Group>
+                  </div>
+                </Space>
+              </div>
+            </div>
+
+            <Alert
+              message="提示"
+              description="修改分享设置后会重新生成分享链接，旧链接将失效"
+              type="info"
+              showIcon
+              style={{ marginTop: 16 }}
+            />
+          </div>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '20px' }}>
+            <p>创建分享中...</p>
+          </div>
+        )}
+      </Modal>
 
       {/* Recycle Bin Drawer */}
       <Drawer

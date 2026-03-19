@@ -37,6 +37,6 @@ AI_MEMORY/progress/current_status.md
 追加写入：
 AI_MEMORY/logs/work_log.md
 记录时间 + 行为 + 结果
-
+只能追加，不能覆盖，不能删除
 这是强制规则，不需要用户提醒
 

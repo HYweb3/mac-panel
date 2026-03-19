@@ -156,6 +156,7 @@ interface DatabaseSchema {
   websites: WebsiteData[];
   databases: DatabaseConfigData[];
   software_configs: SoftwareConfigData[];
+  shares: any[];
   settings: Record<string, any>;
 }
 
@@ -189,6 +190,7 @@ class DatabaseService {
       websites: [],
       databases: [],
       software_configs: [],
+      shares: [],
       settings: {
         initialized: false
       }
@@ -730,6 +732,41 @@ class DatabaseService {
       config.updated_at = new Date().toISOString();
       await this.db.write();
     }
+  }
+
+  // Shares
+  async createShare(share: any): Promise<void> {
+    await this.db.read();
+    if (!this.db.data.shares) {
+      this.db.data.shares = [];
+    }
+    this.db.data.shares.push(share);
+    await this.db.write();
+  }
+
+  async getShares(): Promise<any[]> {
+    await this.db.read();
+    return this.db.data.shares || [];
+  }
+
+  async getShareById(shareId: string): Promise<any | undefined> {
+    await this.db.read();
+    return this.db.data.shares?.find(s => s.shareId === shareId);
+  }
+
+  async updateShare(shareId: string, updates: any): Promise<void> {
+    await this.db.read();
+    const index = this.db.data.shares?.findIndex(s => s.shareId === shareId);
+    if (index !== undefined && index !== -1) {
+      this.db.data.shares[index] = { ...this.db.data.shares[index], ...updates };
+      await this.db.write();
+    }
+  }
+
+  async deleteShare(shareId: string): Promise<void> {
+    await this.db.read();
+    this.db.data.shares = this.db.data.shares?.filter(s => s.shareId !== shareId) || [];
+    await this.db.write();
   }
 }
 

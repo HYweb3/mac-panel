@@ -21,6 +21,7 @@ import terminalLogsRouter from './routes/terminalLogs';
 import logsRouter from './routes/logs';
 import nginxRouter from './routes/nginx';
 import settingsRouter from './routes/settings';
+import fileShareRouter, { downloadHandler } from './routes/fileShare';
 
 // Middleware
 import { errorHandler } from './middlewares/errorHandler';
@@ -93,6 +94,9 @@ app.get('/health', (req, res) => {
 // Public routes
 app.use('/api/auth', authRouter);
 
+// Public file download route (must be before /api/files to avoid authentication)
+app.get('/api/files/download/:shareId', downloadHandler);
+
 // Protected routes (require authentication)
 app.use('/api/files', authMiddleware, filesRouter);
 app.use('/api/websites', authMiddleware, websitesRouter);
@@ -108,6 +112,9 @@ app.use('/api/terminal-logs', authMiddleware, terminalLogsRouter);
 app.use('/api/logs', authMiddleware, logsRouter);
 app.use('/api/nginx', authMiddleware, nginxRouter);
 app.use('/api/settings', authMiddleware, settingsRouter);
+
+// File share routes (protected)
+app.use('/api/files/share', authMiddleware, fileShareRouter);
 
 // WebSocket for terminal - 使用独立的HTTP服务器避免冲突
 const terminalHttpServer = createServer((req, res) => {
