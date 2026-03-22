@@ -14,59 +14,58 @@ const INITIAL_RECONNECT_DELAY = 1000; // 初始重连延迟（1秒）
 const MAX_RECONNECT_DELAY = 30000; // 最大重连延迟（30秒）
 const HEARTBEAT_INTERVAL = 30000; // 心跳间隔（30秒）
 
+interface TerminalInstance {
+  terminal: Terminal;
+  fitAddon: FitAddon;
+  container: HTMLDivElement;
+  ws: WebSocket | null;
+  resizeTimeout: ReturnType<typeof setTimeout> | null;
+  heartbeatTimeout: ReturnType<typeof setInterval> | null;
+  reconnectTimeout: ReturnType<typeof setTimeout> | null;
+  isConnected: boolean;
+  isReconnecting: boolean;
+  reconnectAttempt: number;
+}
+
 export default function TerminalPage() {
   const [searchParams] = useSearchParams();
-  const terminalRef = useRef<HTMLDivElement>(null);
-  const terminalInstanceRef = useRef<any>(null);
-  const wsRef = useRef<WebSocket | null>(null);
-  const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const heartbeatTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const terminalContainerRef = useRef<HTMLDivElement>(null);
+  const terminalInstancesRef = useRef<Map<string, TerminalInstance>>(new Map());
 
-  const [isConnected, setIsConnected] = useState(false);
-  const [isReconnecting, setIsReconnecting] = useState(false);
-  const [reconnectAttempt, setReconnectAttempt] = useState(0);
-  const [reconnectDelay, setReconnectDelay] = useState(INITIAL_RECONNECT_DELAY);
+  const [activeTerminalStatus, setActiveTerminalStatus] = useState<Map<string, {
+    isConnected: boolean;
+    isReconnecting: boolean;
+    reconnectAttempt: number;
+  }>>(new Map());
 
   const { tabs, activeTab, addTab, removeTab, setActiveTab } = useTerminalStore();
 
-  // 清理所有定时器
-  const cleanupTimers = useCallback(() => {
-    if (resizeTimeoutRef.current) {
-      clearTimeout(resizeTimeoutRef.current);
-      resizeTimeoutRef.current = null;
-    }
-    if (heartbeatTimeoutRef.current) {
-      clearInterval(heartbeatTimeoutRef.current);
-      heartbeatTimeoutRef.current = null;
-    }
-    if (reconnectTimeoutRef.current) {
-      clearTimeout(reconnectTimeoutRef.current);
-      reconnectTimeoutRef.current = null;
-    }
-  }, []);
-
   // 启动心跳
-  const startHeartbeat = useCallback((ws: WebSocket) => {
-    console.log('[Terminal] Starting heartbeat...');
-    if (heartbeatTimeoutRef.current) {
-      clearInterval(heartbeatTimeoutRef.current);
+  const startHeartbeat = useCallback((ws: WebSocket, tabId: string) => {
+    console.log(`[Terminal ${tabId}] Starting heartbeat...`);
+
+    const instance = terminalInstancesRef.current.get(tabId);
+    if (!instance) return;
+
+    if (instance.heartbeatTimeout) {
+      clearInterval(instance.heartbeatTimeout);
     }
 
-    heartbeatTimeoutRef.current = setInterval(() => {
+    instance.heartbeatTimeout = setInterval(() => {
       if (ws.readyState === WebSocket.OPEN) {
-        console.log('[Terminal] Sending ping...');
+        console.log(`[Terminal ${tabId}] Sending ping...`);
         ws.send(JSON.stringify({ type: 'ping' }));
       }
     }, HEARTBEAT_INTERVAL);
   }, []);
 
   // 停止心跳
-  const stopHeartbeat = useCallback(() => {
-    if (heartbeatTimeoutRef.current) {
-      clearInterval(heartbeatTimeoutRef.current);
-      heartbeatTimeoutRef.current = null;
-      console.log('[Terminal] Heartbeat stopped');
+  const stopHeartbeat = useCallback((tabId: string) => {
+    const instance = terminalInstancesRef.current.get(tabId);
+    if (instance && instance.heartbeatTimeout) {
+      clearInterval(instance.heartbeatTimeout);
+      instance.heartbeatTimeout = null;
+      console.log(`[Terminal ${tabId}] Heartbeat stopped`);
     }
   }, []);
 
@@ -79,57 +78,74 @@ export default function TerminalPage() {
   }, []);
 
   // 自动重连
-  const scheduleReconnect = useCallback((terminal: Terminal, attempt: number) => {
+  const scheduleReconnect = useCallback((terminal: Terminal, tabId: string, attempt: number) => {
     if (attempt >= MAX_RECONNECT_ATTEMPTS) {
-      console.error('[Terminal] Max reconnect attempts reached');
-      setIsReconnecting(false);
-      setReconnectAttempt(0);
+      console.error(`[Terminal ${tabId}] Max reconnect attempts reached`);
+      setActiveTerminalStatus(prev => {
+        const newStatus = new Map(prev);
+        newStatus.set(tabId, { isConnected: false, isReconnecting: false, reconnectAttempt: 0 });
+        return newStatus;
+      });
       terminal.write('\r\n✗ Max reconnect attempts reached. Please refresh.\r\n');
       message.error('连接失败，请刷新页面重试');
       return;
     }
 
     const delay = calculateReconnectDelay(attempt);
-    setReconnectDelay(delay);
-    setReconnectAttempt(attempt);
-    setIsReconnecting(true);
+    setActiveTerminalStatus(prev => {
+      const newStatus = new Map(prev);
+      newStatus.set(tabId, { isConnected: false, isReconnecting: true, reconnectAttempt: attempt });
+      return newStatus;
+    });
 
     terminal.write(`\r\n⚠ Connection lost. Reconnecting in ${Math.ceil(delay / 1000)}s... (attempt ${attempt}/${MAX_RECONNECT_ATTEMPTS})\r\n`);
 
-    reconnectTimeoutRef.current = setTimeout(() => {
-      console.log(`[Terminal] Reconnect attempt ${attempt + 1}/${MAX_RECONNECT_ATTEMPTS}`);
-      connectWebSocket(terminal, attempt + 1);
-    }, delay);
+    const instance = terminalInstancesRef.current.get(tabId);
+    if (instance) {
+      instance.reconnectTimeout = setTimeout(() => {
+        console.log(`[Terminal ${tabId}] Reconnect attempt ${attempt + 1}/${MAX_RECONNECT_ATTEMPTS}`);
+        connectWebSocket(terminal, tabId, attempt + 1);
+      }, delay);
+    }
   }, [calculateReconnectDelay]);
 
   // 连接 WebSocket
-  const connectWebSocket = useCallback((terminal: Terminal, attempt = 0) => {
-    console.log('[Terminal] Connecting to WebSocket...');
+  const connectWebSocket = useCallback((terminal: Terminal, tabId: string, attempt = 0) => {
+    console.log(`[Terminal ${tabId}] Connecting to WebSocket...`);
     const token = localStorage.getItem('token');
 
     const TERMINAL_WS_URL = import.meta.env.VITE_TERMINAL_WS_URL || 'ws://localhost:3002';
     const wsUrl = `${TERMINAL_WS_URL}/ws/terminal?token=${token}`;
 
-    console.log('[Terminal] WebSocket URL:', wsUrl.replace(token, '***'));
+    console.log(`[Terminal ${tabId}] WebSocket URL:`, token ? wsUrl.replace(token, '***') : wsUrl);
 
     const ws = new WebSocket(wsUrl);
-    wsRef.current = ws;
+
+    // 保存到实例中
+    const instance = terminalInstancesRef.current.get(tabId);
+    if (instance) {
+      instance.ws = ws;
+    }
 
     ws.onopen = () => {
-      console.log('[Terminal] WebSocket connected');
-      setIsConnected(true);
-      setIsReconnecting(false);
-      setReconnectAttempt(0);
+      console.log(`[Terminal ${tabId}] WebSocket connected`);
+      setActiveTerminalStatus(prev => {
+        const newStatus = new Map(prev);
+        newStatus.set(tabId, { isConnected: true, isReconnecting: false, reconnectAttempt: 0 });
+        return newStatus;
+      });
 
       // 清除重连定时器
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current);
-        reconnectTimeoutRef.current = null;
+      const instance = terminalInstancesRef.current.get(tabId);
+      if (instance && instance.reconnectTimeout) {
+        clearTimeout(instance.reconnectTimeout);
+        instance.reconnectTimeout = null;
       }
 
       // 启动心跳
-      startHeartbeat(ws);
+      startHeartbeat(ws, tabId);
 
+      // 清空终端内容（干净的终端）
       terminal.clear();
       terminal.write('\r\n✓ Connected to terminal\r\n');
     };
@@ -144,7 +160,8 @@ export default function TerminalPage() {
             break;
 
           case 'ready':
-            console.log('[Terminal] Terminal ready:', message);
+            console.log(`[Terminal ${tabId}] Terminal ready:`, message);
+            // 清空终端，显示干净的状态
             terminal.clear();
             terminal.write(`\r\n✓ Terminal ready\r\n`);
             terminal.write(`Session: ${message.sessionId}\r\n`);
@@ -163,13 +180,23 @@ export default function TerminalPage() {
           case 'exit':
             console.log('[Terminal] Terminal exited:', message);
             terminal.write(`\r\n✓ Terminal exited (code: ${message.exitCode})\r\n`);
-            setIsConnected(false);
+            setActiveTerminalStatus(prev => {
+              const newStatus = new Map(prev);
+              const current = newStatus.get(tabId) || { isConnected: false, isReconnecting: false, reconnectAttempt: 0 };
+              newStatus.set(tabId, { ...current, isConnected: false });
+              return newStatus;
+            });
             break;
 
           case 'error':
             console.error('[Terminal] Error:', message);
             terminal.write(`\r\n✗ Error: ${message.message}\r\n`);
-            setIsConnected(false);
+            setActiveTerminalStatus(prev => {
+              const newStatus = new Map(prev);
+              const current = newStatus.get(tabId) || { isConnected: false, isReconnecting: false, reconnectAttempt: 0 };
+              newStatus.set(tabId, { ...current, isConnected: false });
+              return newStatus;
+            });
             break;
 
           case 'pong':
@@ -193,18 +220,28 @@ export default function TerminalPage() {
       if (attempt === 0) {
         terminal.write('\r\n✗ Connection error\r\n');
       }
-      setIsConnected(false);
+      setActiveTerminalStatus(prev => {
+        const newStatus = new Map(prev);
+        const current = newStatus.get(tabId) || { isConnected: false, isReconnecting: false, reconnectAttempt: 0 };
+        newStatus.set(tabId, { ...current, isConnected: false });
+        return newStatus;
+      });
     };
 
     ws.onclose = (event) => {
-      console.log('[Terminal] WebSocket closed:', { code: event.code, reason: event.reason });
-      setIsConnected(false);
-      stopHeartbeat();
+      console.log(`[Terminal ${tabId}] WebSocket closed:`, { code: event.code, reason: event.reason });
+      setActiveTerminalStatus(prev => {
+        const newStatus = new Map(prev);
+        const current = newStatus.get(tabId) || { isConnected: false, isReconnecting: false, reconnectAttempt: 0 };
+        newStatus.set(tabId, { ...current, isConnected: false });
+        return newStatus;
+      });
+      stopHeartbeat(tabId);
 
       // 如果不是主动关闭，尝试重连
       if (event.code !== 1000) {
-        console.log('[Terminal] Connection lost, scheduling reconnect...');
-        scheduleReconnect(terminal, attempt);
+        console.log(`[Terminal ${tabId}] Connection lost, scheduling reconnect...`);
+        scheduleReconnect(terminal, tabId, attempt);
       }
     };
 
@@ -216,51 +253,57 @@ export default function TerminalPage() {
 
     // 监听终端尺寸变化
     const handleResize = () => {
-      if (terminalInstanceRef.current && ws.readyState === WebSocket.OPEN) {
-        terminalInstanceRef.current.fitAddon.fit();
+      const currentInstance = terminalInstancesRef.current.get(tabId);
+      if (currentInstance && currentInstance.ws && currentInstance.ws.readyState === WebSocket.OPEN) {
+        currentInstance.fitAddon.fit();
         const dims = { cols: terminal.cols, rows: terminal.rows };
-        ws.send(JSON.stringify({ type: 'resize', data: dims }));
+        currentInstance.ws.send(JSON.stringify({ type: 'resize', data: dims }));
       }
     };
 
     window.addEventListener('resize', handleResize);
 
     // 初始尺寸
-    if (resizeTimeoutRef.current) {
-      clearTimeout(resizeTimeoutRef.current);
+    const currentInstance = terminalInstancesRef.current.get(tabId);
+    if (currentInstance) {
+      if (currentInstance.resizeTimeout) {
+        clearTimeout(currentInstance.resizeTimeout);
+      }
+      currentInstance.resizeTimeout = setTimeout(() => {
+        handleResize();
+      }, 500);
     }
-    resizeTimeoutRef.current = setTimeout(() => {
-      handleResize();
-    }, 500);
-  }, [searchParams, startHeartbeat, stopHeartbeat, scheduleReconnect]);
+  }, [startHeartbeat, stopHeartbeat, scheduleReconnect, searchParams]);
 
   // 手动重连
-  const handleManualReconnect = useCallback(() => {
-    if (!terminalInstanceRef.current) return;
+  const handleManualReconnect = useCallback((tabId: string) => {
+    const instance = terminalInstancesRef.current.get(tabId);
+    if (!instance) return;
 
-    const { terminal } = terminalInstanceRef.current;
-    console.log('[Terminal] Manual reconnect triggered');
+    console.log(`[Terminal ${tabId}] Manual reconnect triggered`);
 
     // 关闭现有连接
-    if (wsRef.current) {
-      wsRef.current.close(1000, 'Manual reconnect');
+    if (instance.ws) {
+      instance.ws.close(1000, 'Manual reconnect');
     }
 
     // 重置状态
-    setIsReconnecting(true);
-    setReconnectAttempt(0);
-    terminal.write('\r\n⚠ Reconnecting...\r\n');
+    setActiveTerminalStatus(prev => {
+      const newStatus = new Map(prev);
+      newStatus.set(tabId, { isConnected: false, isReconnecting: true, reconnectAttempt: 0 });
+      return newStatus;
+    });
 
     // 立即重连
-    connectWebSocket(terminal, 0);
-  }, [connectWebSocket]);
+    connectWebSocket(instance.terminal, tabId, 0);
+  }, [connectWebSocket, startHeartbeat]);
 
-  const initTerminal = useCallback(() => {
-    console.log('[Terminal] Initializing terminal...');
-    if (!terminalRef.current) {
-      console.error('[Terminal] terminalRef.current is null!');
-      return;
-    }
+  const initTerminal = useCallback((tabId: string) => {
+    console.log(`[Terminal ${tabId}] Initializing terminal...`);
+
+    // 为每个终端创建独立的 DOM 容器
+    const container = document.createElement('div');
+    container.className = 'terminal-instance';
 
     const terminal = new Terminal({
       cursorBlink: true,
@@ -276,36 +319,86 @@ export default function TerminalPage() {
     const fitAddon = new FitAddon();
     terminal.loadAddon(fitAddon);
 
-    terminal.open(terminalRef.current);
+    terminal.open(container);
     fitAddon.fit();
 
-    terminalInstanceRef.current = { terminal, fitAddon };
-    console.log('[Terminal] Terminal instance created');
+    const instance: TerminalInstance = {
+      terminal,
+      fitAddon,
+      container,
+      ws: null,
+      resizeTimeout: null,
+      heartbeatTimeout: null,
+      reconnectTimeout: null,
+      isConnected: false,
+      isReconnecting: false,
+      reconnectAttempt: 0,
+    };
 
-    connectWebSocket(terminal, 0);
-  }, [connectWebSocket]);
+    terminalInstancesRef.current.set(tabId, instance);
+    console.log(`[Terminal ${tabId}] Terminal instance created`);
 
+    connectWebSocket(terminal, tabId, 0);
+  }, [connectWebSocket, startHeartbeat]);
+
+  // 初始化或切换终端
+  useEffect(() => {
+    if (activeTab && !terminalInstancesRef.current.has(activeTab)) {
+      console.log(`[Terminal] Initializing terminal for tab: ${activeTab}`);
+      initTerminal(activeTab);
+    }
+
+    // 切换显示活跃的终端
+    terminalInstancesRef.current.forEach((instance, tabId) => {
+      if (instance.container) {
+        instance.container.style.display = tabId === activeTab ? 'block' : 'none';
+        // 确保容器在 DOM 中
+        if (terminalContainerRef.current && !terminalContainerRef.current.contains(instance.container)) {
+          terminalContainerRef.current.appendChild(instance.container);
+        }
+      }
+      // 切换标签时调整活跃终端的尺寸
+      if (tabId === activeTab) {
+        setTimeout(() => {
+          instance.fitAddon.fit();
+        }, 100);
+      }
+    });
+  }, [activeTab, initTerminal]);
+
+  // 组件卸载时清理所有资源
   useEffect(() => {
     console.log('[Terminal] Component mounted');
-    initTerminal();
 
     return () => {
-      console.log('[Terminal] Component unmounting, cleaning up...');
-      cleanupTimers();
-      stopHeartbeat();
-      if (wsRef.current) {
-        wsRef.current.close(1000, 'Component unmount');
-      }
+      console.log('[Terminal] Component unmounting, cleaning up all terminals...');
+      terminalInstancesRef.current.forEach((instance, tabId) => {
+        console.log(`[Terminal] Cleaning up terminal: ${tabId}`);
+        if (instance.ws) {
+          instance.ws.close(1000, 'Component unmount');
+        }
+        if (instance.heartbeatTimeout) {
+          clearInterval(instance.heartbeatTimeout);
+        }
+        if (instance.reconnectTimeout) {
+          clearTimeout(instance.reconnectTimeout);
+        }
+        if (instance.resizeTimeout) {
+          clearTimeout(instance.resizeTimeout);
+        }
+      });
+      terminalInstancesRef.current.clear();
     };
-  }, [initTerminal, cleanupTimers, stopHeartbeat]);
+  }, []);
 
   const handleNewTab = () => {
+    const newTabId = Date.now().toString();
     const newTab = {
-      id: Date.now().toString(),
+      id: newTabId,
       title: `Terminal ${tabs.length + 1}`,
     };
     addTab(newTab);
-    setActiveTab(newTab.id);
+    setActiveTab(newTabId);
   };
 
   const handleCloseTab = (tabId: string) => {
@@ -355,17 +448,19 @@ export default function TerminalPage() {
 
         <Space>
           <div className="connection-status">
-            <span className={`status-indicator ${isConnected ? 'connected' : ''}`} />
-            {isConnected ? '已连接' : isReconnecting ? `重连中... (${reconnectAttempt}/${MAX_RECONNECT_ATTEMPTS})` : '未连接'}
+            <span className={`status-indicator ${(activeTerminalStatus.get(activeTab)?.isConnected || false) ? 'connected' : ''}`} />
+            {(activeTerminalStatus.get(activeTab)?.isConnected || false) ? '已连接' :
+             (activeTerminalStatus.get(activeTab)?.isReconnecting || false) ?
+              `重连中... (${activeTerminalStatus.get(activeTab)?.reconnectAttempt || 0}/${MAX_RECONNECT_ATTEMPTS})` : '未连接'}
           </div>
 
-          {!isConnected && (
+          {!(activeTerminalStatus.get(activeTab)?.isConnected || false) && (
             <Button
               type="text"
               size="small"
               icon={<ReloadOutlined />}
-              onClick={handleManualReconnect}
-              loading={isReconnecting}
+              onClick={() => handleManualReconnect(activeTab)}
+              loading={activeTerminalStatus.get(activeTab)?.isReconnecting || false}
             >
               重连
             </Button>
@@ -374,7 +469,7 @@ export default function TerminalPage() {
       </div>
 
       <Card className="terminal-card" bodyStyle={{ padding: 0 }}>
-        <div ref={terminalRef} className="terminal-container" />
+        <div ref={terminalContainerRef} className="terminal-container" />
       </Card>
     </div>
   );

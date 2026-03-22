@@ -48,7 +48,7 @@ setupGlobalErrorHandlers();
 const app: Application = express();
 const server = createServer(app);
 const PORT = parseInt(process.env.PORT || '3001', 10);
-const FRONTEND_PORT = parseInt(process.env.FRONTEND_PORT || '5173', 10);
+const FRONTEND_PORT = parseInt(process.env.FRONTEND_PORT || '5188', 10);
 
 // 增加服务器超时时间以支持大文件上传
 server.timeout = 10 * 60 * 1000; // 10 分钟

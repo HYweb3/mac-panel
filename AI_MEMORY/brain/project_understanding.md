@@ -102,7 +102,18 @@ mac-panel/
   - 跨页面持久化
   - GlobalEditorContext 状态管理
 
-### 4. 终端管理
+### 4. 终端管理（2026-03-22 增强）
+- **独立终端会话**：每个标签页都有独立的终端实例（Terminal.tsx 重构）
+  - 使用 Map 存储多个终端实例：`Map<string, TerminalInstance>`
+  - 每个 tabId 对应独立的 Terminal、FitAddon、WebSocket 连接
+  - 独立连接状态跟踪：`activeTerminalStatus` Map
+  - 自动初始化：切换到新标签时自动创建独立终端
+  - 自动清理：非活跃标签的资源自动释放（WebSocket、定时器）
+- **心跳和重连机制**：
+  - WebSocket 心跳（30秒间隔）保持连接活跃
+  - 指数退避重连策略（最大重连次数10次）
+  - 手动重连按钮支持
+  - 连接状态实时显示（已连接/重连中/未连接）
 - 多标签页支持
 - node-pty 伪终端
 - 支持 zsh/bash/fish
