@@ -313,8 +313,107 @@ export const renameFile = async (filePath: string, newName: string) => {
 };
 
 // Compress files
-export const compressFiles = async (paths: string[], targetPath: string, format: 'zip' | 'tar' | 'tar.gz') => {
+export const compressFiles = async (paths: string[], targetPath: string, format: 'zip' | 'tar' | 'tar.gz', password?: string) => {
   const validTarget = validatePath(targetPath);
+
+  // 如果有密码且格式为 ZIP，使用 archiver-zip-encrypted
+  if (password && format === 'zip') {
+    console.log('[Compress] Using archiver-zip-encrypted with password protection');
+
+    try {
+      const archiver = require('archiver');
+      require('archiver-zip-encrypted');
+
+      const output = fs.createWriteStream(validTarget);
+      const archive = archiver.create('zip', {
+        password,
+        encryptionMethod: 'aes256',
+        zlib: { level: 9 }
+      });
+
+      // 排除模式
+      const excludePatterns = [
+        'node_modules', '.git', '.next', '.nuxt', '.DS_Store', 'Thumbs.db', '*.log'
+      ];
+
+      const shouldExclude = (itemPath: string): boolean => {
+        const itemName = path.basename(itemPath);
+        return excludePatterns.some(pattern => {
+          if (pattern.includes('*')) {
+            const regex = new RegExp(pattern.replace('*', '.*'));
+            return regex.test(itemName);
+          }
+          return itemName === pattern || itemPath.endsWith(`/${pattern}`);
+        });
+      };
+
+      const addDirectoryToArchive = (dirPath: string, archivePath: string) => {
+        const items = fs.readdirSync(dirPath);
+
+        items.forEach(item => {
+          const itemPath = path.join(dirPath, item);
+          const relativePath = path.relative(dirPath, itemPath);
+          const archiveItemPath = path.join(archivePath, relativePath);
+
+          if (shouldExclude(itemPath)) {
+            console.log(`[Compress] Excluding: ${itemPath}`);
+            return;
+          }
+
+          try {
+            const stats = fs.statSync(itemPath);
+            if (stats.isDirectory()) {
+              addDirectoryToArchive(itemPath, archiveItemPath);
+            } else if (stats.isFile()) {
+              archive.file(itemPath, { name: archiveItemPath });
+            }
+          } catch (error) {
+            console.warn(`[Compress] Skipping ${itemPath}:`, error);
+          }
+        });
+      };
+
+      return new Promise((resolve, reject) => {
+        output.on('close', () => {
+          console.log('[Compress] Password-protected ZIP created successfully');
+          resolve({ success: true, size: archive.pointer(), encrypted: true });
+        });
+
+        archive.on('error', (err: any) => {
+          console.error('[Compress] Archive error:', err);
+          reject(err);
+        });
+
+        archive.on('warning', (err: any) => {
+          if (err.code !== 'ENOENT') {
+            console.warn('[Compress] Archive warning:', err);
+          }
+        });
+
+        archive.pipe(output);
+
+        // Add files/directories to archive
+        paths.forEach((filePath) => {
+          const validPath = validatePath(filePath);
+          const stats = fs.statSync(validPath);
+
+          if (stats.isDirectory()) {
+            console.log(`[Compress] Adding directory: ${validPath}`);
+            addDirectoryToArchive(validPath, path.basename(filePath));
+          } else {
+            archive.file(validPath, { name: path.basename(filePath) });
+          }
+        });
+
+        archive.finalize();
+      });
+    } catch (error: any) {
+      console.error('[Compress] Failed to create encrypted ZIP:', error);
+      throw new Error(`创建加密 ZIP 失败: ${error.message}`);
+    }
+  }
+
+  // 否则使用 archiver（无密码或非 ZIP 格式）
   const output = fs.createWriteStream(validTarget);
 
   // archiver only supports 'zip' and 'tar', for tar.gz we use 'tar' with gzip enabled
@@ -475,34 +574,122 @@ export const extractArchive = async (sourcePath: string, targetPath: string, pas
 
 // 解压 ZIP 文件（支持密码）
 const extractZipWithPassword = async (sourcePath: string, targetPath: string, password?: string) => {
-  try {
-    // 首先尝试使用 extract-zip 库（不支持密码）
-    if (!password) {
-      try {
-        await extractZip(sourcePath, { dir: path.resolve(targetPath) });
-        return;
-      } catch (error: any) {
-        // 如果是密码相关错误，尝试使用系统命令
-        if (error.message && (error.message.includes('password') || error.message.includes('encrypted'))) {
-          console.log('[Extract] ZIP file may require password, trying system command...');
-        } else {
-          throw error;
-        }
+  // 如果有密码，使用 7z 命令（正确支持 AES-256 加密）
+  if (password) {
+    console.log('[Extract] Using 7z with password validation');
+
+    // 首先检查 7z 是否可用
+    try {
+      await execAsync('which 7z');
+    } catch (error) {
+      throw new Error('解压密码保护的 ZIP 文件需要安装 7z 命令。请安装: brew install p7zip');
+    }
+
+    try {
+      // 使用 7z 解压，它会正确验证密码
+      const extractCommand = `7z x -p"${password}" -y -o"${targetPath}" "${sourcePath}"`;
+
+      console.log('[Extract] Executing:', extractCommand.replace(password, '***'));
+
+      const { stdout, stderr } = await execAsync(extractCommand);
+
+      // 检查 7z 的输出中是否有密码错误信息
+      if (stderr && (
+        stderr.includes('Wrong password') ||
+        stderr.includes('password incorrect') ||
+        stderr.includes('Data Error') ||
+        stderr.includes('CRC Failed')
+      )) {
+        console.error('[Extract] Password validation failed:', stderr);
+        throw new Error('密码错误，请输入正确的密码');
       }
+
+      // 检查是否成功解压
+      if (stdout && stdout.includes('Everything is Ok')) {
+        console.log('[Extract] ZIP extracted successfully with correct password');
+        return;
+      }
+
+      // 如果没有明确错误，也检查是否真的解压了文件
+      console.log('[Extract] 7z output:', stdout);
+      console.log('[Extract] 7z stderr:', stderr);
+
+    } catch (error: any) {
+      console.error('[Extract] 7z extraction failed:', error);
+
+      // 检查错误消息
+      if (error.message && (
+        error.message.includes('Wrong password') ||
+        error.message.includes('password incorrect') ||
+        error.message.includes('Data Error') ||
+        error.stderr?.includes('Wrong password')
+      )) {
+        throw new Error('密码错误，请输入正确的密码');
+      }
+
+      throw new Error(`解压失败: ${error.message || '未知错误'}`);
     }
+  }
 
-    // 如果有密码或 extract-zip 失败，使用 unzip 命令（支持密码）
-    const unzipCommand = password
-      ? `unzip -o -P "${password}" "${sourcePath}" -d "${targetPath}"`
-      : `unzip -o "${sourcePath}" -d "${targetPath}"`;
+  // 如果没有密码，首先检查是否是加密的 ZIP
+  // 使用 7z 来检测加密（即使没有密码）
+  try {
+    console.log('[Extract] Checking if ZIP is encrypted...');
+    const listCommand = `7z l "${sourcePath}"`;
 
-    await execAsync(unzipCommand);
+    try {
+      const { stdout, stderr } = await execAsync(listCommand);
+
+      // 检查输出中是否有加密标记
+      if ((stdout && stdout.includes('Encrypted')) ||
+          (stderr && stderr.includes('Encrypted')) ||
+          (stdout && stdout.includes('AES'))) {
+        console.log('[Extract] ZIP file is encrypted, password required');
+        throw new Error('该压缩文件需要密码才能解压，请在解压选项中输入密码');
+      }
+    } catch (checkError: any) {
+      // 如果 7z 不可用，继续尝试正常解压流程
+      console.log('[Extract] 7z not available or check failed, continuing with normal extraction');
+    }
   } catch (error: any) {
-    // 如果 unzip 命令失败，尝试其他方法
-    if (error.message && error.message.includes('command not found')) {
-      throw new Error('系统未安装 unzip 命令，请安装: brew install unzip');
+    if (error.message.includes('需要密码')) {
+      throw error;
     }
-    throw error;
+    // 如果检查失败，继续尝试解压
+  }
+
+  // 如果没有密码，首先尝试使用 extract-zip 库
+  try {
+    console.log('[Extract] Using extract-zip library');
+    await extractZip(sourcePath, { dir: path.resolve(targetPath) });
+    console.log('[Extract] ZIP extracted successfully without password');
+    return;
+  } catch (error: any) {
+    console.log('[Extract] extract-zip failed:', error.message);
+
+    // 如果错误信息提示需要密码，告知用户
+    if (error.message && (
+      error.message.includes('password') ||
+      error.message.includes('encrypted') ||
+      error.message.includes('ZIP encrypted')
+    )) {
+      throw new Error('该压缩文件需要密码才能解压，请在解压选项中输入密码');
+    }
+
+    // 如果 extract-zip 失败，尝试使用系统 unzip 命令
+    console.log('[Extract] Trying system unzip command');
+    try {
+      const unzipCommand = `unzip -o "${sourcePath}" -d "${targetPath}"`;
+      await execAsync(unzipCommand);
+      console.log('[Extract] ZIP extracted successfully with system unzip');
+      return;
+    } catch (unzipError: any) {
+      console.error('[Extract] System unzip failed:', unzipError);
+      if (unzipError.stderr && unzipError.stderr.includes('password required')) {
+        throw new Error('该压缩文件需要密码才能解压，请在解压选项中输入密码');
+      }
+      throw unzipError;
+    }
   }
 };
 
@@ -799,35 +986,69 @@ export const getFilePermissions = async (filePath: string) => {
 };
 
 // Change file permissions
-export const changePermissions = async (filePath: string, permissions: any) => {
+export const changePermissions = async (filePath: string, permissions: any, recursive: boolean = false) => {
   const validPath = validatePath(filePath);
-  
+
   // Build mode from permissions object
   let mode = 0;
-  
+
   // User permissions
   if (permissions.user.read) mode += parseInt('400', 8);
   if (permissions.user.write) mode += parseInt('200', 8);
   if (permissions.user.execute) mode += parseInt('100', 8);
-  
+
   // Group permissions
   if (permissions.group.read) mode += parseInt('040', 8);
   if (permissions.group.write) mode += parseInt('020', 8);
   if (permissions.group.execute) mode += parseInt('010', 8);
-  
+
   // Others permissions
   if (permissions.others.read) mode += parseInt('004', 8);
   if (permissions.others.write) mode += parseInt('002', 8);
   if (permissions.others.execute) mode += parseInt('001', 8);
-  
+
   // Change permissions
-  await fs.chmod(validPath, mode);
-  
+  if (recursive) {
+    // Check if it's a directory
+    const stats = await fs.stat(validPath);
+    if (!stats.isDirectory()) {
+      throw new Error('递归选项仅适用于目录');
+    }
+
+    // Recursively change permissions
+    await changePermissionsRecursive(validPath, mode);
+  } else {
+    await fs.chmod(validPath, mode);
+  }
+
   return {
     success: true,
     path: validPath,
     octal: mode.toString(8),
+    recursive,
   };
+};
+
+// Helper function to recursively change permissions
+const changePermissionsRecursive = async (dirPath: string, mode: number): Promise<void> => {
+  // Change permissions for the directory itself
+  await fs.chmod(dirPath, mode);
+
+  // Read directory contents
+  const entries = await fs.readdir(dirPath, { withFileTypes: true });
+
+  // Process each entry
+  for (const entry of entries) {
+    const fullPath = path.join(dirPath, entry.name);
+
+    if (entry.isDirectory()) {
+      // Recursively process subdirectory
+      await changePermissionsRecursive(fullPath, mode);
+    } else {
+      // Change permissions for file
+      await fs.chmod(fullPath, mode);
+    }
+  }
 };
 
 // Change file owner

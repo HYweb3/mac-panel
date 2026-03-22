@@ -66,8 +66,8 @@ router.post('/move', requirePermission('files', 'write'), async (req: AuthReques
 // Compress files
 router.post('/compress', requirePermission('files', 'write'), async (req: AuthRequest, res: Response) => {
   try {
-    const { paths, targetPath, format } = req.body;
-    const result = await fileService.compressFiles(paths, targetPath, format);
+    const { paths, targetPath, format, password } = req.body;
+    const result = await fileService.compressFiles(paths, targetPath, format, password);
     res.json(result);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -277,13 +277,13 @@ router.get('/permissions', requirePermission('files', 'read'), async (req: AuthR
 // Change file permissions
 router.put('/permissions', requirePermission('files', 'write'), async (req: AuthRequest, res: Response) => {
   try {
-    const { path, permissions } = req.body;
-    
+    const { path, permissions, recursive } = req.body;
+
     if (!path || !permissions) {
       return res.status(400).json({ error: '文件路径和权限不能为空' });
     }
-    
-    const result = await fileService.changePermissions(path, permissions);
+
+    const result = await fileService.changePermissions(path, permissions, recursive);
     res.json(result);
   } catch (error: any) {
     res.status(500).json({ error: error.message });

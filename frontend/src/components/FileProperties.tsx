@@ -70,6 +70,7 @@ const FileProperties: React.FC<FilePropertiesProps> = ({
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [fileInfo, setFileInfo] = useState<FileInfo | null>(null);
+  const [recursive, setRecursive] = useState(false);
   const [permissions, setPermissions] = useState<FilePermissions>({
     user: { read: false, write: false, execute: false },
     group: { read: false, write: false, execute: false },
@@ -170,11 +171,12 @@ const FileProperties: React.FC<FilePropertiesProps> = ({
         body: JSON.stringify({
           path: filePath,
           permissions,
+          recursive: fileInfo?.isDirectory && recursive,
         }),
       });
 
       if (response.ok) {
-        message.success('权限已更新');
+        message.success(recursive ? '权限已递归更新' : '权限已更新');
         onSuccess();
         onClose();
       } else {
@@ -527,6 +529,23 @@ const FileProperties: React.FC<FilePropertiesProps> = ({
               </Checkbox>
             </Space>
           </div>
+
+          {/* 递归选项（仅目录显示） */}
+          {fileInfo?.isDirectory && (
+            <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid #f0f0f0' }}>
+              <Checkbox
+                checked={recursive}
+                onChange={(e) => setRecursive(e.target.checked)}
+              >
+                <Space>
+                  <span>递归应用到子目录和文件</span>
+                  <Text type="secondary" style={{ fontSize: 12 }}>
+                    (将权限应用到当前目录及其所有子目录和文件)
+                  </Text>
+                </Space>
+              </Checkbox>
+            </div>
+          )}
         </div>
 
         {/* 所有者信息 */}

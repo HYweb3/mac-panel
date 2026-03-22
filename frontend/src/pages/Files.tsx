@@ -433,17 +433,103 @@ export default function Files() {
     } catch (error: any) { message.error(`操作失败: ${error.message || '未知错误'}`); }
   };
 
+  const handleCompressClick = () => {
+    if (selectedItems.length === 0) return;
+
+    // 智能生成默认压缩包名称
+    let defaultName = '';
+
+    if (selectedItems.length === 1) {
+      // 单个文件/文件夹
+      const item = selectedItems[0];
+      if (item.type === 'directory') {
+        // 文件夹：使用文件夹名字
+        defaultName = item.name;
+      } else {
+        // 单个文件：使用文件名（去掉扩展名）
+        const parts = item.name.split('.');
+        if (parts.length > 1) {
+          parts.pop(); // 去掉扩展名
+          defaultName = parts.join('.');
+        } else {
+          defaultName = item.name;
+        }
+      }
+    } else {
+      // 多个文件：使用第一个文件名（去掉扩展名）或"archive"
+      const firstItem = selectedItems[0];
+      if (firstItem.type === 'directory') {
+        defaultName = firstItem.name;
+      } else {
+        const parts = firstItem.name.split('.');
+        if (parts.length > 1) {
+          parts.pop();
+          defaultName = parts.join('.');
+        } else {
+          defaultName = 'archive';
+        }
+      }
+    }
+
+    // 设置表单默认值
+    compressForm.setFieldsValue({
+      name: defaultName,
+      format: 'zip'
+    });
+
+    // 打开模态框
+    setCompressModalOpen(true);
+  };
+
+  const handleCompressSingle = (item: FileItem) => {
+    // 设置选中的项为当前文件夹
+    setSelectedItems([item]);
+    setSelectedRowKeys([item.path]);
+
+    // 智能生成默认压缩包名称（文件夹名字）
+    const defaultName = item.name;
+
+    // 设置表单默认值
+    compressForm.setFieldsValue({
+      name: defaultName,
+      format: 'zip'
+    });
+
+    // 打开模态框
+    setCompressModalOpen(true);
+  };
+
   const handleCompress = async (values: any) => {
     if (selectedRowKeys.length === 0) return message.warning('请先选择要压缩的文件');
     try {
       const token = localStorage.getItem('token');
-      const { name, format } = values;
+      const { name, format, password } = values;
+
+      // 检查密码和格式是否匹配
+      if (password && format !== 'zip') {
+        message.error('密码保护仅支持 ZIP 格式');
+        return;
+      }
+
       const archiveName = name.endsWith(format) ? name : `${name}.${format}`;
-      const response = await fetch(`${API_BASE_URL}/api/files/compress`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ paths: selectedRowKeys, targetPath: `${currentPath}/${archiveName}`, format }) });
+      const response = await fetch(`${API_BASE_URL}/api/files/compress`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          paths: selectedRowKeys,
+          targetPath: `${currentPath}/${archiveName}`,
+          format,
+          password: format === 'zip' ? password : undefined
+        })
+      });
+
       if (response.ok) {
         const result = await response.json();
         if (result.success) {
-          message.success(`压缩成功，文件大小: ${formatSize(result.size || 0)}`);
+          message.success(`压缩成功，文件大小: ${formatSize(result.size || 0)}${password ? ' (已加密)' : ''}`);
           setCompressModalOpen(false);
           compressForm.resetFields();
           loadFiles();
@@ -454,7 +540,9 @@ export default function Files() {
         const error = await response.json();
         message.error(`压缩失败: ${error.error || '未知错误'}`);
       }
-    } catch (error: any) { message.error(`压缩失败: ${error.message || '未知错误'}`); }
+    } catch (error: any) {
+      message.error(`压缩失败: ${error.message || '未知错误'}`);
+    }
   };
 
   const handleExtract = async () => {
@@ -1350,6 +1438,9 @@ export default function Files() {
     const items: any[] = [{ key: 'open', label: record.type === 'directory' ? '打开文件夹' : '打开文件', icon: <FolderOutlined />, onClick: () => { closeMenu(); handleFileClick(record); } }];
     if (record.type === 'file') { items.push({ key: 'edit', label: '编辑', icon: <EditOutlined />, onClick: () => { closeMenu(); openFileInEditor(record.path, record.name); } }, { key: 'download', label: '下载', icon: <DownloadOutlined />, onClick: () => { closeMenu(); handleDownload(record); } }, { key: 'share', label: '分享', icon: <ShareAltOutlined />, onClick: () => { closeMenu(); handleShare(record); } }); }
     items.push({ key: 'rename', label: '重命名', icon: <EditOutlined />, onClick: () => { closeMenu(); handleRename(record.path, record.name); } }, { key: 'copy', label: '复制', icon: <CopyOutlined />, onClick: () => { closeMenu(); setSelectedItems([record]); setSelectedRowKeys([record.path]); handleCopy(); } }, { key: 'cut', label: '剪切', icon: <ScissorOutlined />, onClick: () => { closeMenu(); setSelectedItems([record]); setSelectedRowKeys([record.path]); handleCut(); } });
+    // 文件夹添加压缩选项
+    if (record.type === 'directory') { items.push({ key: 'compress', label: '压缩', icon: <FileZipOutlined />, onClick: () => { closeMenu(); handleCompressSingle(record); } }); }
+    // 压缩文件添加解压选项
     if (isArchive(record.name)) { items.push({ key: 'extract', label: '解压', icon: <FolderOpenOutlined />, onClick: () => { closeMenu(); setExtractFile(record); extractForm.setFieldsValue({ destinationPath: currentPath }); setExtractModalOpen(true); } }); }
     items.push({ type: 'divider' }, { key: 'properties', label: '属性', icon: <InfoCircleOutlined />, onClick: () => { closeMenu(); setSelectedFilePath(record.path); setPropertiesVisible(true); } }, { key: 'delete', label: '删除', danger: true, icon: <DeleteOutlined />, onClick: () => { closeMenu(); setSelectedItems([record]); setSelectedRowKeys([record.path]); Modal.confirm({ title: '确认删除', content: `确定要删除 ${record.name} 吗？`, onOk: handleDelete }); } });
     return items;
@@ -1585,7 +1676,7 @@ export default function Files() {
           {clipboard.length > 0 && <Button type="primary" icon={<SnippetsOutlined />} onClick={handlePaste}>粘贴 ({clipboard.length})</Button>}
           <Button icon={<CopyOutlined />} onClick={handleCopy} disabled={selectedItems.length === 0}>复制</Button>
           <Button icon={<ScissorOutlined />} onClick={handleCut} disabled={selectedItems.length === 0}>剪切</Button>
-          <Button icon={<FileZipOutlined />} onClick={() => setCompressModalOpen(true)} disabled={selectedItems.length === 0}>压缩</Button>
+          <Button icon={<FileZipOutlined />} onClick={handleCompressClick} disabled={selectedItems.length === 0}>压缩</Button>
           <Popconfirm title="确定要删除选中的文件吗？" onConfirm={handleDelete} okText="确定" cancelText="取消"><Button danger icon={<DeleteOutlined />} disabled={selectedItems.length === 0}>删除</Button></Popconfirm>
           <Dropdown
             menu={{
@@ -1775,13 +1866,29 @@ export default function Files() {
       </Modal>
       <Modal title="压缩文件" open={compressModalOpen} onCancel={() => setCompressModalOpen(false)} footer={null}>
         <Form form={compressForm} onFinish={handleCompress} layout="vertical">
-          <Form.Item name="name" label="压缩包名称" rules={[{ required: true }]} initialValue="archive"><Input placeholder="archive" /></Form.Item>
-          <Form.Item name="format" label="压缩格式" rules={[{ required: true }]} initialValue="zip">
-            <Radio.Group>
-              <Radio value="zip">ZIP (.zip)</Radio>
+          <Form.Item name="name" label="压缩包名称" rules={[{ required: true, message: '请输入压缩包名称' }]}>
+            <Input placeholder="自动根据选中的文件/文件夹命名" />
+          </Form.Item>
+          <Form.Item name="format" label="压缩格式" rules={[{ required: true }]}>
+            <Radio.Group onChange={(e) => {
+              const format = e.target.value;
+              const password = compressForm.getFieldValue('password');
+              // 如果选择非 ZIP 格式且有密码，提示用户
+              if (password && format !== 'zip') {
+                message.warning('密码保护仅支持 ZIP 格式');
+              }
+            }}>
+              <Radio value="zip">ZIP (.zip) - 支持密码</Radio>
               <Radio value="tar.gz">TAR.GZ (.tar.gz)</Radio>
               <Radio value="tar">TAR (.tar)</Radio>
             </Radio.Group>
+          </Form.Item>
+          <Form.Item
+            name="password"
+            label="密码（可选）"
+            extra="仅 ZIP 格式支持密码保护，留空则无密码"
+          >
+            <Input.Password placeholder="设置压缩包密码" />
           </Form.Item>
           <Form.Item><Button type="primary" htmlType="submit" block>开始压缩</Button></Form.Item>
         </Form>
