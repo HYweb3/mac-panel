@@ -307,16 +307,18 @@ export default function TerminalPage() {
 
     const terminal = new Terminal({
       cursorBlink: true,
-      fontSize: 14,
-      fontFamily: 'Monaco, Menlo, "Ubuntu Mono", "SF Mono", monospace',
-      fontWeight: 400,
+      fontSize: 14, // 使用适中的字体大小
+      fontFamily: '"SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace', // SF Mono 是 macOS 上最接近正方形的等宽字体
+      fontWeight: 600, // 稍微加粗使字符更清晰
       fontWeightBold: 700,
-      lineHeight: 1.0,
+      lineHeight: 1.1, // 轻微增加行高以避免字符被裁剪
       letterSpacing: 0,
+      // 主题配置 - 高对比度
       theme: {
-        background: '#1e1e1e',
-        foreground: '#d4d4d4',
-        cursor: '#d4d4d4',
+        background: '#000000', // 纯黑背景
+        foreground: '#ffffff', // 纯白前景
+        cursor: '#ffffff',
+        selection: 'rgba(255, 255, 255, 0.3)',
         black: '#000000',
         red: '#cd3131',
         green: '#0dbc79',
@@ -340,6 +342,7 @@ export default function TerminalPage() {
       cursorStyle: 'block',
       macOptionIsMeta: false,
       rightClickSelectsWord: true,
+      allowTransparency: false,
     });
 
     const fitAddon = new FitAddon();
@@ -347,6 +350,59 @@ export default function TerminalPage() {
 
     terminal.open(container);
     fitAddon.fit();
+
+    // 强制字符单元格为正方形（用于二维码显示）
+    const forceSquareCells = () => {
+      const screenElement = container.querySelector('.xterm-screen');
+      if (screenElement) {
+        const canvas = screenElement.querySelector('canvas');
+        if (canvas) {
+          // 获取实际的字符尺寸
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            const fontSize = 16;
+            ctx.font = `${fontSize}px Menlo, Monaco, Courier New, monospace`;
+            const metrics = ctx.measureText('M');
+            const charWidth = metrics.width;
+
+            console.log(`[Terminal ${tabId}] Char width: ${charWidth.toFixed(2)}px, fontSize: ${fontSize}px`);
+
+            // 计算需要的 lineHeight 来使字符成为正方形
+            const targetLineHeight = fontSize / charWidth;
+            console.log(`[Terminal ${tabId}] Target lineHeight for square cells: ${targetLineHeight.toFixed(3)}`);
+
+            // 动态调整容器的样式
+            const rowsElement = container.querySelector('.xterm-rows');
+            if (rowsElement) {
+              (rowsElement as HTMLElement).style.lineHeight = targetLineHeight.toString();
+              console.log(`[Terminal ${tabId}] Applied lineHeight: ${targetLineHeight.toFixed(3)}`);
+            }
+
+            // 添加全局样式来强制正方形单元格
+            const styleId = `terminal-square-cells-${tabId}`;
+            let styleElement = document.getElementById(styleId) as HTMLStyleElement;
+            if (!styleElement) {
+              styleElement = document.createElement('style');
+              styleElement.id = styleId;
+              document.head.appendChild(styleElement);
+            }
+            styleElement.textContent = `
+              .terminal-instance .xterm-rows {
+                line-height: ${targetLineHeight.toFixed(3)} !important;
+              }
+              .terminal-instance .xterm-screen {
+                line-height: ${targetLineHeight.toFixed(3)} !important;
+              }
+            `;
+          }
+        }
+      }
+    };
+
+    // 延迟执行，等待 DOM 完全渲染
+    setTimeout(forceSquareCells, 100);
+    setTimeout(forceSquareCells, 500);
+    setTimeout(forceSquareCells, 1000);
 
     const instance: TerminalInstance = {
       terminal,

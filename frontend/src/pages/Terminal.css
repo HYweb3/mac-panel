@@ -95,7 +95,8 @@
 
 /* 优化二维码显示 */
 .terminal-instance .xterm {
-  padding: 8px;
+  padding: 10px;
+  /* 确保字体是正方形的 */
 }
 
 .terminal-instance .xterm-viewport {
@@ -105,13 +106,54 @@
 /* 确保字符正确渲染 - 二维码需要精确的字符对齐 */
 .terminal-instance .xterm-screen {
   font-feature-settings: "liga" 0, "calt" 0;
-  text-rendering: optimizeSpeed;
+  text-rendering: geometricPrecision; /* 使用几何精确渲染 */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* 关键：强制使用等宽数字 */
+  font-variant-numeric: tabular-nums;
 }
 
 /* 确保等宽字体正确显示 */
 .terminal-instance .xterm-rows {
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'SF Mono', 'Courier New', monospace;
-  font-variant-ligatures: none;
+  font-family: 'Menlo', 'Monaco', 'Courier New', monospace !important;
+  font-variant-ligatures: none !important;
+  /* 确保行高与字体大小一致，创建正方形单元格 */
+  line-height: 1 !important;
+}
+
+/* 强制字符单元格为正方形 - 关键修复！ */
+.terminal-instance .xterm-char {
+  width: 1em !important;
+  height: 1em !important;
+  /* 使用 transform 拉伸字符使其成为正方形 */
+  display: inline-block !important;
+}
+
+/* 禁用可能影响对齐的 CSS */
+.terminal-instance .xterm-row {
+  display: block !important;
+  height: 1em !important;
+  line-height: 1em !important;
+}
+
+.terminal-instance .xterm-char-measure-element {
+  font-family: 'Menlo', 'Monaco', 'Courier New', monospace !important;
+}
+
+/* 关键：强制 canvas 渲染为正方形单元格 */
+.terminal-instance canvas {
+  image-rendering: pixelated !important;
+  image-rendering: crisp-edges !important;
+}
+
+/* 覆盖 xterm.js 的默认样式，强制正方形单元格 */
+.terminal-instance .xterm-rows > div {
+  height: 1em !important;
+  line-height: 1em !important;
+}
+
+.terminal-instance .xterm-rows > div > span {
+  display: inline-block !important;
+  width: 1em !important;
+  height: 1em !important;
 }
