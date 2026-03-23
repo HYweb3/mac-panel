@@ -38,7 +38,65 @@ export default function TerminalPage() {
     reconnectAttempt: number;
   }>>(new Map());
 
+  // 跟踪每个终端是否显示二维码
+  const [qrCodeMode, setQrCodeMode] = useState<Map<string, boolean>>(new Map());
+
   const { tabs, activeTab, addTab, removeTab, setActiveTab } = useTerminalStore();
+
+  // 检测是否为二维码输出
+  const isQrCodeOutput = useCallback((data: string): boolean => {
+    // 检测二维码特征：
+    // 1. ASCII 模式：大量的 # 和空格
+    // 2. UTF-8 模式：大量的 █ ▀ ▄ ▄ 等块字符
+    // 3. 连续多行都有类似的模式
+
+    const lines = data.split('\n');
+    if (lines.length < 3) return false;
+
+    // 检查是否有连续的包含大量块字符的行
+    let blockCharLineCount = 0;
+    const threshold = lines.length > 5 ? 3 : 2; // 至少 2-3 行
+
+    for (const line of lines) {
+      if (line.length < 10) continue; // 忽略短行
+
+      // 计算 ASCII 块字符比例（# 符号）
+      const asciiBlocks = (line.match(/#/g) || []).length;
+      const asciiRatio = asciiBlocks / line.length;
+
+      // 计算 UTF-8 块字符比例（█ ▀ ▄ 等）
+      const utf8Blocks = (line.match(/[█▀▄■□▬▮▯]/g) || []).length;
+      const utf8Ratio = utf8Blocks / line.length;
+
+      // 如果一行中块字符占比超过 40%，认为是二维码行
+      if (asciiRatio > 0.4 || utf8Ratio > 0.4) {
+        blockCharLineCount++;
+      }
+    }
+
+    return blockCharLineCount >= threshold;
+  }, []);
+
+  // 更新终端字体模式
+  const updateTerminalFontMode = useCallback((tabId: string, showQrCode: boolean) => {
+    const container = terminalContainerRef.current;
+    if (!container) return;
+
+    const instance = terminalInstancesRef.current.get(tabId);
+    if (!instance || !instance.container) return;
+
+    const terminalElement = instance.container;
+
+    if (showQrCode) {
+      terminalElement.classList.add('qr-code-mode');
+      console.log(`[Terminal ${tabId}] QR code detected, switching to monospace font`);
+    } else {
+      terminalElement.classList.remove('qr-code-mode');
+      console.log(`[Terminal ${tabId}] Normal text, switching to default font`);
+    }
+
+    setQrCodeMode(prev => new Map(prev).set(tabId, showQrCode));
+  }, []);
 
   // 启动心跳
   const startHeartbeat = useCallback((ws: WebSocket, tabId: string) => {
@@ -156,6 +214,20 @@ export default function TerminalPage() {
 
         switch (message.type) {
           case 'data':
+            // 检测是否为二维码输出
+            const isQrCode = isQrCodeOutput(message.data);
+
+            // 如果检测到二维码，切换字体
+            if (isQrCode) {
+              updateTerminalFontMode(tabId, true);
+            } else if (!isQrCode && qrCodeMode.get(tabId)) {
+              // 如果当前是二维码模式，但新数据不是二维码，延迟恢复
+              // 这样可以避免在二维码中间切换字体
+              setTimeout(() => {
+                updateTerminalFontMode(tabId, false);
+              }, 500);
+            }
+
             terminal.write(message.data);
             break;
 
@@ -273,7 +345,7 @@ export default function TerminalPage() {
         handleResize();
       }, 500);
     }
-  }, [startHeartbeat, stopHeartbeat, scheduleReconnect, searchParams]);
+  }, [startHeartbeat, stopHeartbeat, scheduleReconnect, searchParams, isQrCodeOutput, updateTerminalFontMode, qrCodeMode]);
 
   // 手动重连
   const handleManualReconnect = useCallback((tabId: string) => {
@@ -308,16 +380,16 @@ export default function TerminalPage() {
     const terminal = new Terminal({
       cursorBlink: true,
       fontSize: 14, // 使用适中的字体大小
-      fontFamily: '"SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace', // SF Mono 是 macOS 上最接近正方形的等宽字体
-      fontWeight: 600, // 稍微加粗使字符更清晰
-      fontWeightBold: 700,
-      lineHeight: 1.1, // 轻微增加行高以避免字符被裁剪
+      fontFamily: 'Menlo, Monaco, "Courier New", monospace', // 默认使用舒适的等宽字体
+      fontWeight: 'normal', // 默认字重
+      fontWeightBold: 'bold',
+      lineHeight: 1.0,
       letterSpacing: 0,
-      // 主题配置 - 高对比度
+      // 主题配置
       theme: {
-        background: '#000000', // 纯黑背景
-        foreground: '#ffffff', // 纯白前景
-        cursor: '#ffffff',
+        background: '#1e1e1e', // 默认深色背景
+        foreground: '#d4d4d4', // 默认前景色
+        cursor: '#d4d4d4',
         selection: 'rgba(255, 255, 255, 0.3)',
         black: '#000000',
         red: '#cd3131',
@@ -350,59 +422,6 @@ export default function TerminalPage() {
 
     terminal.open(container);
     fitAddon.fit();
-
-    // 强制字符单元格为正方形（用于二维码显示）
-    const forceSquareCells = () => {
-      const screenElement = container.querySelector('.xterm-screen');
-      if (screenElement) {
-        const canvas = screenElement.querySelector('canvas');
-        if (canvas) {
-          // 获取实际的字符尺寸
-          const ctx = canvas.getContext('2d');
-          if (ctx) {
-            const fontSize = 16;
-            ctx.font = `${fontSize}px Menlo, Monaco, Courier New, monospace`;
-            const metrics = ctx.measureText('M');
-            const charWidth = metrics.width;
-
-            console.log(`[Terminal ${tabId}] Char width: ${charWidth.toFixed(2)}px, fontSize: ${fontSize}px`);
-
-            // 计算需要的 lineHeight 来使字符成为正方形
-            const targetLineHeight = fontSize / charWidth;
-            console.log(`[Terminal ${tabId}] Target lineHeight for square cells: ${targetLineHeight.toFixed(3)}`);
-
-            // 动态调整容器的样式
-            const rowsElement = container.querySelector('.xterm-rows');
-            if (rowsElement) {
-              (rowsElement as HTMLElement).style.lineHeight = targetLineHeight.toString();
-              console.log(`[Terminal ${tabId}] Applied lineHeight: ${targetLineHeight.toFixed(3)}`);
-            }
-
-            // 添加全局样式来强制正方形单元格
-            const styleId = `terminal-square-cells-${tabId}`;
-            let styleElement = document.getElementById(styleId) as HTMLStyleElement;
-            if (!styleElement) {
-              styleElement = document.createElement('style');
-              styleElement.id = styleId;
-              document.head.appendChild(styleElement);
-            }
-            styleElement.textContent = `
-              .terminal-instance .xterm-rows {
-                line-height: ${targetLineHeight.toFixed(3)} !important;
-              }
-              .terminal-instance .xterm-screen {
-                line-height: ${targetLineHeight.toFixed(3)} !important;
-              }
-            `;
-          }
-        }
-      }
-    };
-
-    // 延迟执行，等待 DOM 完全渲染
-    setTimeout(forceSquareCells, 100);
-    setTimeout(forceSquareCells, 500);
-    setTimeout(forceSquareCells, 1000);
 
     const instance: TerminalInstance = {
       terminal,

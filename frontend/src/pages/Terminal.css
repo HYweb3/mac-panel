@@ -93,67 +93,51 @@
   left: 0;
 }
 
-/* 优化二维码显示 */
+/* 默认模式：舒适的终端体验 */
 .terminal-instance .xterm {
   padding: 10px;
-  /* 确保字体是正方形的 */
 }
 
 .terminal-instance .xterm-viewport {
   overflow-y: auto;
 }
 
-/* 确保字符正确渲染 - 二维码需要精确的字符对齐 */
 .terminal-instance .xterm-screen {
   font-feature-settings: "liga" 0, "calt" 0;
-  text-rendering: geometricPrecision; /* 使用几何精确渲染 */
+  text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* 关键：强制使用等宽数字 */
+}
+
+.terminal-instance .xterm-rows {
+  font-variant-ligatures: none;
+}
+
+/* 二维码模式：优化的字体和样式 */
+.terminal-instance.qr-code-mode .xterm-screen {
+  /* 强制使用等宽字体 */
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace !important;
+  text-rendering: geometricPrecision;
   font-variant-numeric: tabular-nums;
 }
 
-/* 确保等宽字体正确显示 */
-.terminal-instance .xterm-rows {
-  font-family: 'Menlo', 'Monaco', 'Courier New', monospace !important;
+.terminal-instance.qr-code-mode .xterm-rows {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace !important;
   font-variant-ligatures: none !important;
-  /* 确保行高与字体大小一致，创建正方形单元格 */
-  line-height: 1 !important;
+  line-height: 1.1 !important;
 }
 
-/* 强制字符单元格为正方形 - 关键修复！ */
-.terminal-instance .xterm-char {
-  width: 1em !important;
-  height: 1em !important;
-  /* 使用 transform 拉伸字符使其成为正方形 */
-  display: inline-block !important;
-}
-
-/* 禁用可能影响对齐的 CSS */
-.terminal-instance .xterm-row {
-  display: block !important;
-  height: 1em !important;
-  line-height: 1em !important;
-}
-
-.terminal-instance .xterm-char-measure-element {
-  font-family: 'Menlo', 'Monaco', 'Courier New', monospace !important;
-}
-
-/* 关键：强制 canvas 渲染为正方形单元格 */
-.terminal-instance canvas {
+.terminal-instance.qr-code-mode canvas {
   image-rendering: pixelated !important;
   image-rendering: crisp-edges !important;
 }
 
-/* 覆盖 xterm.js 的默认样式，强制正方形单元格 */
-.terminal-instance .xterm-rows > div {
-  height: 1em !important;
-  line-height: 1em !important;
+/* 二维码模式下的主题优化 */
+.terminal-instance.qr-code-mode .xterm-screen {
+  background: #000000 !important;
 }
 
-.terminal-instance .xterm-rows > div > span {
-  display: inline-block !important;
-  width: 1em !important;
-  height: 1em !important;
+.terminal-instance.qr-code-mode {
+  --xterm-background: #000000;
+  --xterm-foreground: #ffffff;
 }
