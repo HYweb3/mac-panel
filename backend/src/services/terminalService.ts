@@ -56,13 +56,18 @@ class TerminalService {
       }
     }
 
-    // 环境变量
+    // 环境变量 - 优化二维码显示
     const env = {
       ...process.env,
       TERM: 'xterm-256color',
       COLORTERM: 'truecolor',
       LANG: 'en_US.UTF-8',
-      LC_ALL: 'en_US.UTF-8'
+      LC_ALL: 'en_US.UTF-8',
+      LC_CTYPE: 'en_US.UTF-8',
+      LESSCHARSET: 'utf-8',
+      // 确保正确处理 Unicode 字符（二维码使用块字符）
+      PYTHONIOENCODING: 'utf-8',
+      NODE_ENV: process.env.NODE_ENV || 'development'
     };
 
     // 创建 PTY 伪终端（添加错误处理）
@@ -85,7 +90,6 @@ class TerminalService {
         env: env,
         cols: options.cols || 80,
         rows: options.rows || 24,
-        // 添加一些额外的选项来提高稳定性
         encoding: 'utf8'
       });
 

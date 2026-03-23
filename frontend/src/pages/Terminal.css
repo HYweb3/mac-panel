@@ -92,3 +92,26 @@
   top: 0;
   left: 0;
 }
+
+/* 优化二维码显示 */
+.terminal-instance .xterm {
+  padding: 8px;
+}
+
+.terminal-instance .xterm-viewport {
+  overflow-y: auto;
+}
+
+/* 确保字符正确渲染 - 二维码需要精确的字符对齐 */
+.terminal-instance .xterm-screen {
+  font-feature-settings: "liga" 0, "calt" 0;
+  text-rendering: optimizeSpeed;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 确保等宽字体正确显示 */
+.terminal-instance .xterm-rows {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'SF Mono', 'Courier New', monospace;
+  font-variant-ligatures: none;
+}
