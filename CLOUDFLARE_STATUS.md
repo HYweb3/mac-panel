@@ -99,7 +99,7 @@ Connector ID: baed8ef1-56cb-4d49-9d65-bd6b373e9f2c
 - lax09 (Los Angeles, CA)
 
 协议: HTTP/2
-ICMP 代理: 192.168.0.77
+ICMP 代理: 192.168.1.77
 ```
 
 ## 故障排查

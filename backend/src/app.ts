@@ -59,8 +59,8 @@ server.headersTimeout = 11 * 60 * 1000; // 11 分钟（略长于 keepAliveTimeou
 const allowedOrigins = [
   `http://localhost:${FRONTEND_PORT}`,
   `http://localhost:5174`,
-  `http://192.168.0.77:${FRONTEND_PORT}`,
-  `http://192.168.0.77:5174`,
+  `http://192.168.1.77:${FRONTEND_PORT}`,
+  `http://192.168.1.77:5174`,
   `http://127.0.0.1:${FRONTEND_PORT}`,
   `http://127.0.0.1:5174`
 ];

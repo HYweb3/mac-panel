@@ -70,7 +70,7 @@ show_status() {
 
     echo -e "\n${BLUE}=== 访问地址 ===${NC}"
     echo -e "本地: ${GREEN}http://localhost:5188${NC}"
-    echo -e "局域网: ${GREEN}http://192.168.0.77:5188${NC}"
+    echo -e "局域网: ${GREEN}http://192.168.1.77:5188${NC}"
 }
 
 # 查看日志

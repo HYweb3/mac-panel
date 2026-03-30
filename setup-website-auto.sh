@@ -93,7 +93,7 @@ if [ "$HTTP_CODE" = "200" ]; then
     echo ""
     echo "🔗 访问地址："
     echo "  http://localhost:${PORT}"
-    echo "  http://192.168.0.77:${PORT}"
+    echo "  http://192.168.1.77:${PORT}"
     echo ""
     echo "✅ 配置完成！"
 else

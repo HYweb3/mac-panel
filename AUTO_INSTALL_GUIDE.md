@@ -22,7 +22,7 @@ curl -fsSL https://raw.githubusercontent.com/HYweb3/mac-panel/master/web-install
 **安装完成后访问**：
 - 🌐 **前端界面**：http://localhost:5173
 - 🔧 **后端 API**：http://localhost:3001
-- 📡 **局域网访问**：http://192.168.0.77:5173
+- 📡 **局域网访问**：http://192.168.1.77:5173
 
 **默认账号**：admin / admin123
 
@@ -110,12 +110,12 @@ http://localhost:3001
 
 **前端界面**：
 ```
-http://192.168.0.77:5173
+http://192.168.1.77:5173
 ```
 
 **后端 API**：
 ```
-http://192.168.0.77:3001
+http://192.168.1.77:3001
 ```
 
 **查看本机IP**:
@@ -370,7 +370,7 @@ sudo launchctl load /Library/LaunchAgents/com.macpanel.plist
 
 ```env
 # 添加你的局域网IP或使用通配符
-ALLOWED_HOSTS=localhost,127.0.0.1,192.168.0.77,0.0.0.0
+ALLOWED_HOSTS=localhost,127.0.0.1,192.168.1.77,0.0.0.0
 ```
 
 ### 查看局域网IP

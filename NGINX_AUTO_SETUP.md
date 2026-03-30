@@ -98,11 +98,11 @@ server {
 curl http://localhost:9188
 
 # 局域网测试
-curl http://192.168.0.77:9188
+curl http://192.168.1.77:9188
 
 # 浏览器访问
 open http://localhost:9188
-open http://192.168.0.77:9188
+open http://192.168.1.77:9188
 ```
 
 ## 🔍 故障排查

@@ -259,7 +259,7 @@ sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add 5173
 cat /opt/mac-panel/backend/.env | grep ALLOWED_HOSTS
 
 # 应包含局域网IP，如:
-# ALLOWED_HOSTS=localhost,127.0.0.1,192.168.0.77
+# ALLOWED_HOSTS=localhost,127.0.0.1,192.168.1.77
 
 # 4. 重启服务
 mac-panel restart
