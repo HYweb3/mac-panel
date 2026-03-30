@@ -554,7 +554,7 @@ curl -fsSL https://raw.githubusercontent.com/HYweb3/mac-panel/master/web-install
 
 ### 2. 服务IP配置更新 ✅
 **修改内容**:
-- 服务IP从 192.168.0.7 更改为 192.168.0.77
+- 服务IP从 192.168.0.7 更改为 192.168.1.77
 - 修改配置文件:
   - backend/.env - ALLOWED_HOSTS
   - frontend/.env - API和WebSocket地址
@@ -690,7 +690,7 @@ curl -fsSL https://raw.githubusercontent.com/HYweb3/mac-panel/master/web-install
 
 **验证成功**：
 - ✅ http://localhost:9188 正常访问
-- ✅ http://192.168.0.77:9188 正常访问
+- ✅ http://192.168.1.77:9188 正常访问
 - ✅ HTML内容正确显示
 
 **创建工具**：
@@ -714,7 +714,7 @@ curl -fsSL https://raw.githubusercontent.com/HYweb3/mac-panel/master/web-install
 **用户需要执行**：
 1. 运行：`sudo ./setup-nginx-auto.sh`
 2. 在面板中创建/编辑网站（端口将自动生效）
-3. 测试访问：`http://192.168.0.77:9188`
+3. 测试访问：`http://192.168.1.77:9188`
 
 **问题修复**：
 - ✅ ai.ai9188.us 网站9188端口无法访问
@@ -724,7 +724,7 @@ curl -fsSL https://raw.githubusercontent.com/HYweb3/mac-panel/master/web-install
 ### Nginx 局域网访问配置 ✅
 **用户需求**：
 - 修复 Nginx 配置保存权限问题
-- 启用局域网访问（192.168.0.77）
+- 启用局域网访问（192.168.1.77）
 
 **已完成**：
 - ✅ 修改 nginxService.ts 支持 macOS Homebrew Nginx
@@ -737,7 +737,7 @@ curl -fsSL https://raw.githubusercontent.com/HYweb3/mac-panel/master/web-install
 1. 运行：`sudo ./setup-nginx.sh`
 2. 重启后端服务
 3. 在 Mac Panel 中重新生成网站配置
-4. 测试访问：http://192.168.0.77:8080
+4. 测试访问：http://192.168.1.77:8080
 
 ### 策略调整（2026-03-07 15:50）
 **网站管理页面**：

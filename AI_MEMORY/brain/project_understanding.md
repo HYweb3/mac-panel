@@ -274,18 +274,18 @@ const getApiBaseUrl = (): string => {
 ## 网络配置（公网访问）
 
 ### 当前局域网配置
-- **服务IP**: 192.168.0.77
-- **前端**: http://192.168.0.77:5173
-- **后端**: http://192.168.0.77:3001
-- **WebSocket**: ws://192.168.0.77:3001
+- **服务IP**: 192.168.1.77
+- **前端**: http://192.168.1.77:5173
+- **后端**: http://192.168.1.77:3001
+- **WebSocket**: ws://192.168.1.77:3001
 
 ### 环境变量配置
 1. 前端 `frontend/.env`:
 ```bash
-VITE_API_URL=http://192.168.0.77:3001
-VITE_WS_URL=ws://192.168.0.77:3001
-VITE_TERMINAL_WS_URL=ws://192.168.0.77:3002
-VITE_BROWSER_WS_URL=ws://192.168.0.77:3003
+VITE_API_URL=http://192.168.1.77:3001
+VITE_WS_URL=ws://192.168.1.77:3001
+VITE_TERMINAL_WS_URL=ws://192.168.1.77:3002
+VITE_BROWSER_WS_URL=ws://192.168.1.77:3003
 ```
 
 2. 后端 `backend/.env`:
@@ -293,7 +293,7 @@ VITE_BROWSER_WS_URL=ws://192.168.0.77:3003
 PORT=3001
 JWT_SECRET=your-strong-secret-key
 NODE_ENV=production
-ALLOWED_HOSTS=localhost,127.0.0.1,192.168.0.77
+ALLOWED_HOSTS=localhost,127.0.0.1,192.168.1.77
 ```
 
 ### Nginx 反向代理（推荐生产环境）
@@ -605,7 +605,7 @@ sudo ./install.sh myuser
 - **当前版本**: v2.8.0
 - **状态**: ✅ 生产可用
 - **最后更新**: 2026-03-07
-- **最新配置**: 服务IP已从 192.168.0.7 更改为 192.168.0.77
+- **最新配置**: 服务IP已从 192.168.0.7 更改为 192.168.1.77
 - **最新功能**: Nginx 自动配置和管理功能
 
 ## 开发规范
